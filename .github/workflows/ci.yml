@@ -1,0 +1,41 @@
+name: CI
+
+on:
+  pull_request:
+    paths:
+      - 'src/**'
+  push:
+    branches:
+      - main
+    paths:
+      - 'src/**'
+  workflow_dispatch:
+  merge_group:
+
+jobs:
+  format:
+    name: Formatting
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: cargo fmt --check
+
+  test:
+    name: Testing
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Building
+        run: cargo build
+      - name: Building (full)
+        run: cargo build --all-features
+      - name: Testing
+        run: cargo test --all-features
+
+  install:
+    name: Testing installation
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Installing
+        run: cargo install --all-features --path .
