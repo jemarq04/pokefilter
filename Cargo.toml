@@ -1,0 +1,20 @@
+[package]
+name = "pokefilter"
+description = ""
+authors = ["Justin Marquez"]
+version = "0.1.0"
+edition = "2024"
+readme = "README.md"
+license = "MIT"
+homepage = "https://github.com/jemarq04/pokefilter"
+repository = "https://github.com/jemarq04/pokefilter"
+keywords = ["pokemon", "pokeapi", "pokedex"]
+
+[dependencies]
+clap = { version = "4.5.53", features = ["derive"] }
+futures = "0.3.31"
+rustemon = "4.3.0"
+tokio = { version = "1.49.0", features = ["full"] }
+
+[features]
+default = ["clap/wrap_help"]
