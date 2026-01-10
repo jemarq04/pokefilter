@@ -1,0 +1,5 @@
+edition = "2024"
+match_block_trailing_comma = true
+short_array_element_width_threshold = 30
+tab_spaces = 2
+use_field_init_shorthand = true
