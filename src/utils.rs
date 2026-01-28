@@ -52,6 +52,54 @@ macro_rules! get_name {
   }};
 }
 
+#[macro_export]
+macro_rules! get_name_strict {
+  ( follow $T:expr, $client:ident, $lang:expr ) => {{
+    let mut result = String::new();
+    if let Ok(obj) = $T.follow(&$client).await {
+      for name in obj.names.iter() {
+        if let Ok(r_lang) = name.language.follow(&$client).await
+          && r_lang.name == $lang
+        {
+          result = name.name.clone();
+        }
+      }
+    }
+    if result.is_empty() {
+      Err(cli::error(
+        ErrorKind::InvalidValue,
+        format!(
+          "API error: could not retrieve formatted name for {}",
+          $T.name
+        ),
+      ))
+    } else {
+      Ok(result)
+    }
+  }};
+  ( $T:expr, $client:ident, $lang:expr ) => {{
+    let mut result = String::new();
+    for name in $T.names.iter() {
+      if let Ok(r_lang) = name.language.follow(&$client).await
+        && r_lang.name == $lang
+      {
+        result = name.name.clone();
+      }
+    }
+    if result.is_empty() {
+      Err(cli::error(
+        ErrorKind::InvalidValue,
+        format!(
+          "API error: could not retrieve formatted name for {}",
+          $T.name
+        ),
+      ))
+    } else {
+      Ok(result)
+    }
+  }};
+}
+
 #[cfg(test)]
 mod tests {
   use rustemon::client::RustemonClient;
