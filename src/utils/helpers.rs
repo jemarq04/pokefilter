@@ -4,6 +4,7 @@ use clap::error::ErrorKind;
 use futures::future;
 use rustemon::Follow;
 use rustemon::client::RustemonClient;
+use std::{fs::File, io::prelude::*, path::Display};
 
 pub async fn get_pokemon_name(
   client: &RustemonClient,
@@ -39,4 +40,14 @@ pub async fn get_pokemon_name(
   }
 
   get_name_strict!(follow pokemon.species, client, lang)
+}
+
+pub fn fwriteln(outfile: &mut File, display: &Display, content: &str) -> Result<(), clap::Error> {
+  if let Err(why) = outfile.write_all(format!("{}\n", content).as_bytes()) {
+    return Err(cli::error(
+      ErrorKind::InvalidValue,
+      format!("error writing to file {}: {}", display, why),
+    ));
+  }
+  Ok(())
 }

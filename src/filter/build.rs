@@ -67,7 +67,8 @@ pub async fn build(
     growth_rate,gender_rate,base_stats,EV_yields,hatch_counter,base_EXP,capture_rate,base_happiness,height,weight,\
     stage,evolution_type,is_starter,is_fossil,is_baby,is_mythical,is_legendary,is_UB,is_paradox,category,category_id";
 
-  let mut result: Vec<String> = vec![String::from(HEADER)];
+  //let mut result: Vec<String> = vec![String::from(HEADER)];
+  helpers::fwriteln(&mut outfile, &path.display(), HEADER)?;
 
   let r_all_species = match rustemon::pokemon::pokemon_species::get_all_entries(&client).await {
     Ok(list) => list,
@@ -79,8 +80,7 @@ pub async fn build(
     },
   };
 
-  const START: i64 = 1;
-  const END: i64 = 30;
+  let end = 151;
   for r_species in r_all_species.iter() {
     let species = match r_species.follow(&client).await {
       Ok(obj) => obj,
@@ -91,10 +91,8 @@ pub async fn build(
         ));
       },
     };
-    match species.id {
-      ..START => continue,
-      END.. => break,
-      _ => {},
+    if species.id > end {
+      break;
     }
 
     for variety in species.varieties.iter() {
@@ -111,10 +109,16 @@ pub async fn build(
         },
       };
       println!("Building {}...", mon.name);
-      result.push(build_pokemon(&client, &species, &mon, lang).await?);
+      //result.push(build_pokemon(&client, &species, &mon, lang).await?);
+      helpers::fwriteln(
+        &mut outfile,
+        &path.display(),
+        &build_pokemon(&client, &species, &mon, lang).await?,
+      )?;
     }
   }
 
+  /*
   println!("{:?}", result);
   if let Some(val) = result.first() {
     println!("{}", val);
@@ -122,6 +126,7 @@ pub async fn build(
   if let Some(val) = result.last() {
     println!("{}", val);
   }
+  */
   Ok(())
 }
 
