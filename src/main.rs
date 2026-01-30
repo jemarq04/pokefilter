@@ -37,9 +37,9 @@ async fn main() {
 
   // Call the appropriate subcommand for results
   match args.command {
-    SubArgs::BuildCmd { force, lang } => {
-      if let Err(e) = filter::build(&client, force, lang).await {
-        panic!("{}", e.render());
+    SubArgs::BuildCmd { force, path, lang } => {
+      if let Err(e) = filter::build(&client, force, path, lang).await {
+        e.exit();
       }
     },
   }

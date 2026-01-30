@@ -44,6 +44,9 @@ pub enum SubArgs {
     #[arg(short, long, help = "overwrite file, if one exists")]
     force: bool,
 
+    #[arg(short, long, help = "")]
+    path: Option<String>,
+
     #[arg(value_enum,
       short = 'L',
       long,

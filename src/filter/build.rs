@@ -4,6 +4,8 @@ use clap::error::ErrorKind;
 use rustemon::model::pokemon::{Pokemon, PokemonSpecies};
 use rustemon::{Follow, client::RustemonClient};
 use std::collections::HashMap;
+use std::fs::{File, create_dir};
+use std::path::Path;
 
 //TODO: Build command will re-create CSV file containing all filter-able information for pokemon
 //      Add customizability for this feature later on, for now build a default spread (names, stats, etc.)
@@ -11,17 +13,59 @@ use std::collections::HashMap;
 pub async fn build(
   client: &RustemonClient,
   force: bool,
+  path: Option<String>,
   lang: LanguageId,
-) -> Result<Vec<String>, clap::Error> {
-  // Check for existing file first...
-  //
-  // If file not found, continue to building file below
+) -> Result<(), clap::Error> {
+  let path = match path {
+    Some(p) => p,
+    None => match std::env::home_dir() {
+      Some(home) => {
+        let dirpath = format!("{}/.pokefilter", home.display());
+        let dirpath = Path::new(&dirpath);
+        if !dirpath.exists() {
+          if let Err(why) = create_dir(dirpath) {
+            return Err(cli::error(
+              ErrorKind::InvalidValue,
+              format!("error creating directory {}: {}", dirpath.display(), why),
+            ));
+          }
+        }
+        format!("{}/.pokefilter/pokeinfo.csv", home.display())
+      },
+      None => {
+        eprintln!("warning: CSV file will be built in working directory");
+        String::from("pokeinfo.csv")
+      },
+    },
+  };
+  let path = Path::new(&path);
+  if path.exists() && !force {
+    let valid = cli::VALID;
+    return Err(cli::error(
+      ErrorKind::InvalidValue,
+      format!(
+        "error: file {} already exists\n\n{valid}tip:{valid:#} to overwrite it, run '{} build --force'",
+        path.display(),
+        cli::get_appname()
+      ),
+    ));
+  }
+
+  let mut outfile = match File::create(&path) {
+    Ok(file) => file,
+    Err(why) => {
+      return Err(cli::error(
+        ErrorKind::InvalidValue,
+        format!("error creating file {}: {}", path.display(), why),
+      ));
+    },
+  };
 
   // Remaining in previous format:
   // Regional Dexes,Past Types,Past Abilities,(Past Stats),
   const HEADER: &str = "pokemon_id,national_dex,pokemon,species,generation,types,abilities,color,egg_groups,held_items,\
     growth_rate,gender_rate,base_stats,EV_yields,hatch_counter,base_EXP,capture_rate,base_happiness,height,weight,\
-    stage,evolution_type,is_starter,is_fossil,is_baby,is_mythical,is_legendary,is_UB,is_paradox,category,category_id,";
+    stage,evolution_type,is_starter,is_fossil,is_baby,is_mythical,is_legendary,is_UB,is_paradox,category,category_id";
 
   let mut result: Vec<String> = vec![String::from(HEADER)];
 
@@ -78,7 +122,7 @@ pub async fn build(
   if let Some(val) = result.last() {
     println!("{}", val);
   }
-  Ok(result)
+  Ok(())
 }
 
 pub async fn build_pokemon(
@@ -424,7 +468,7 @@ pub async fn build_pokemon(
       format!("error: failed to retrieve appropriate pokedex ordering"),
     ));
   }
-  output.push_str(&format!("{},", category_id));
+  output.push_str(&format!("{}", category_id));
 
   Ok(output)
 }
