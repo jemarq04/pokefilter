@@ -67,7 +67,6 @@ pub async fn build(
     growth_rate,gender_rate,base_stats,EV_yields,hatch_counter,base_EXP,capture_rate,base_happiness,height,weight,\
     stage,evolution_type,is_starter,is_fossil,is_baby,is_mythical,is_legendary,is_UB,is_paradox,category,category_id";
 
-  //let mut result: Vec<String> = vec![String::from(HEADER)];
   helpers::fwriteln(&mut outfile, &path.display(), HEADER)?;
 
   let r_all_species = match rustemon::pokemon::pokemon_species::get_all_entries(&client).await {
@@ -109,7 +108,6 @@ pub async fn build(
         },
       };
       println!("Building {}...", mon.name);
-      //result.push(build_pokemon(&client, &species, &mon, lang).await?);
       helpers::fwriteln(
         &mut outfile,
         &path.display(),
@@ -118,15 +116,6 @@ pub async fn build(
     }
   }
 
-  /*
-  println!("{:?}", result);
-  if let Some(val) = result.first() {
-    println!("{}", val);
-  }
-  if let Some(val) = result.last() {
-    println!("{}", val);
-  }
-  */
   Ok(())
 }
 
