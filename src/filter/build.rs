@@ -386,7 +386,12 @@ pub async fn build_pokemon(
         }
         category_id.to_string()
       },
-      _ => String::new(),
+      _ => {
+        return Err(cli::error(
+          ErrorKind::InvalidValue,
+          format!("error: invalid key: {}", key),
+        ));
+      },
     });
   }
 
