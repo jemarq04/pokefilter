@@ -63,11 +63,12 @@ pub async fn build(
 
   // Remaining in previous format:
   // Regional Dexes,Past Types,Past Abilities,(Past Stats),
-  const HEADER: &str = "pokemon_id,national_dex,pokemon,species,generation,types,abilities,color,egg_groups,held_items,\
+  const DEFAULT_HEADER: &str = "pokemon_id,national_dex,pokemon,species,generation,types,abilities,color,egg_groups,held_items,\
     growth_rate,gender_rate,base_stats,EV_yields,hatch_counter,base_EXP,capture_rate,base_happiness,height,weight,\
     stage,evolution_type,is_starter,is_fossil,is_baby,is_mythical,is_legendary,is_UB,is_paradox,category,category_id";
+  let keys = DEFAULT_HEADER.split(",").collect::<Vec<&str>>();
 
-  helpers::fwriteln(&mut outfile, &path.display(), HEADER)?;
+  helpers::fwriteln(&mut outfile, &path.display(), DEFAULT_HEADER)?;
 
   let r_all_species = match rustemon::pokemon::pokemon_species::get_all_entries(&client).await {
     Ok(list) => list,
@@ -111,7 +112,7 @@ pub async fn build(
       helpers::fwriteln(
         &mut outfile,
         &path.display(),
-        &build_pokemon(&client, &species, &mon, lang).await?,
+        &build_pokemon(&client, &species, &mon, lang, &keys).await?,
       )?;
     }
   }
@@ -124,150 +125,278 @@ pub async fn build_pokemon(
   species: &PokemonSpecies,
   mon: &Pokemon,
   lang: LanguageId,
+  keys: &Vec<&str>,
 ) -> Result<String, clap::Error> {
-  let mut output = String::new();
+  let mut output = Vec::new();
+  /*
+  const DEFAULT_HEADER: &str = "pokemon_id,national_dex,pokemon,species,generation,types,abilities,color,egg_groups,held_items,\
+    growth_rate,gender_rate,base_stats,EV_yields,hatch_counter,base_EXP,capture_rate,base_happiness,height,weight,\
+    stage,evolution_type,is_starter,is_fossil,is_baby,is_mythical,is_legendary,is_UB,is_paradox,category,category_id";
+  */
 
-  // Name/ID
-  output.push_str(&format!(
-    "{},{},{},{},",
-    mon.name,
-    species.id,
-    helpers::get_pokemon_name(&client, &mon, &lang.to_string()).await?,
-    get_name_strict!(species, client, lang.to_string())?,
-  ));
-
-  // Generation
-  let generation = match species.generation.follow(&client).await {
-    Ok(obj) => obj,
-    Err(_) => {
-      return Err(cli::error(
-        ErrorKind::InvalidValue,
-        format!(
-          "API error: could not retrieve generation {}",
-          species.generation.name
-        ),
-      ));
-    },
-  };
-  output.push_str(&format!("{},", generation.id));
-
-  // Types
-  let mut types = Vec::new();
-  for r_type in mon.types.iter() {
-    types.push(get_name_strict!(follow r_type.type_, client, lang.to_string())?);
+  let mut generation = None;
+  let mut stage = None;
+  let mut evolution_type = None;
+  let mut category = None;
+  for key in keys.iter() {
+    output.push(match *key {
+      // Name/ID
+      "pokemon_id" => mon.name.to_string(),
+      "national_dex" => species.id.to_string(),
+      "pokemon" => helpers::get_pokemon_name(&client, &mon, &lang.to_string()).await?,
+      "species" => get_name_strict!(species, client, lang.to_string())?,
+      // Generation
+      "generation" => {
+        if let None = generation {
+          generation = Some(match species.generation.follow(&client).await {
+            Ok(obj) => obj,
+            Err(_) => {
+              return Err(cli::error(
+                ErrorKind::InvalidValue,
+                format!(
+                  "API error: could not retrieve generation {}",
+                  species.generation.name
+                ),
+              ));
+            },
+          });
+        }
+        generation.clone().unwrap().id.to_string()
+      },
+      // Types
+      "types" => {
+        let mut types = Vec::new();
+        for r_type in mon.types.iter() {
+          types.push(get_name_strict!(follow r_type.type_, client, lang.to_string())?);
+        }
+        types.join(";")
+      },
+      // Abilities
+      "abilities" => {
+        let mut abilities = Vec::new();
+        for r_ability in mon.abilities.iter() {
+          let mut ability: String =
+            get_name_strict!(follow r_ability.ability, client, lang.to_string())?;
+          if r_ability.is_hidden {
+            ability.push_str("*");
+          }
+          abilities.push(ability);
+        }
+        abilities.join(";")
+      },
+      // Color
+      "color" => get_name_strict!(follow species.color, client, lang.to_string())?,
+      // Egg Groups
+      "egg_groups" => {
+        let mut egg_groups = Vec::new();
+        for r_group in species.egg_groups.iter() {
+          egg_groups.push(get_name_strict!(follow r_group, client, lang.to_string())?);
+        }
+        egg_groups.join(";")
+      },
+      // Held Items
+      "held_items" => {
+        let mut held_items = Vec::new();
+        for r_item in mon.held_items.iter() {
+          held_items.push(get_name_strict!(follow r_item.item, client, lang.to_string())?);
+        }
+        held_items.join(";")
+      },
+      // Growth Rate
+      "growth_rate" => species.growth_rate.name.clone(),
+      // Gender Rate
+      "gender_rate" => species.gender_rate.to_string(),
+      // Base Stats
+      "base_stats" => {
+        let mut base_stats: Vec<i64> = mon
+          .stats
+          .clone()
+          .into_iter()
+          .map(|stat| stat.base_stat)
+          .collect();
+        base_stats.push(base_stats.iter().sum());
+        base_stats
+          .into_iter()
+          .map(|stat| stat.to_string())
+          .collect::<Vec<String>>()
+          .join(";")
+      },
+      // EV Yields
+      "EV_yields" => {
+        let mut ev_yields: Vec<i64> = mon
+          .stats
+          .clone()
+          .into_iter()
+          .map(|stat| stat.effort)
+          .collect();
+        ev_yields.push(ev_yields.iter().sum());
+        ev_yields
+          .into_iter()
+          .map(|stat| stat.to_string())
+          .collect::<Vec<String>>()
+          .join(";")
+      },
+      // Hatch Counter
+      "hatch_counter" => match species.hatch_counter {
+        Some(hatch_counter) => hatch_counter.to_string(),
+        None => String::from("None"),
+      },
+      //Base EXP
+      "base_EXP" => match mon.base_experience {
+        Some(base_experience) => base_experience.to_string(),
+        None => String::from("None"),
+      },
+      // Capture Rate
+      "capture_rate" => species.capture_rate.to_string(),
+      // Base Happiness (TODO: typo in rustemon)
+      "base_happiness" => match species.base_hapiness {
+        Some(base_happiness) => base_happiness.to_string(),
+        None => String::from("None"),
+      },
+      // Height/Weight
+      "height" => mon.height.to_string(),
+      "weight" => mon.weight.to_string(),
+      // Stage and Evolution Type (TODO: handle exceptions)
+      "stage" => {
+        if let None = stage {
+          (stage, evolution_type) = get_evo_stage_and_type(&client, &species).await?;
+        }
+        stage.unwrap().to_string()
+      },
+      "evolution_type" => {
+        if let None = evolution_type {
+          (stage, evolution_type) = get_evo_stage_and_type(&client, &species).await?;
+        }
+        evolution_type.unwrap().to_string()
+      },
+      // Starter
+      "is_starter" => match species.id {
+        1..10
+        | 152..162
+        | 252..262
+        | 387..397
+        | 495..505
+        | 650..660
+        | 722..732
+        | 810..820
+        | 906..916 => String::from("1"),
+        _ if mon.name == "pikachu-starter" || mon.name == "eevee-starter" => String::from("1"),
+        _ => String::from("0"),
+      },
+      // Fossil
+      "is_fossil" => match species.id {
+        138..143 | 345..349 | 408..412 | 564..568 | 696..700 | 880..884 => String::from("1"),
+        _ => String::from("0"),
+      },
+      // Baby
+      "is_baby" => (species.is_baby as i64).to_string(),
+      // Mythical
+      "is_mythical" => (species.is_mythical as i64).to_string(),
+      // Legendary
+      "is_legendary" => (species.is_legendary as i64).to_string(),
+      // Ultra Beast
+      "is_UB" => match species.id {
+        793..800 | 803..807 => String::from("1"),
+        _ => String::from("0"),
+      },
+      // Paradox
+      "is_paradox" => match species.id {
+        984..996 | 1005..1011 | 1020..1024 => String::from("1"),
+        _ => String::from("0"),
+      },
+      // Category/Category ID (TODO: error check)
+      "category" => {
+        if let None = category {
+          category = Some(
+            get_category(
+              &client,
+              &species,
+              &mon,
+              &generation.clone().unwrap(),
+              &lang.to_string(),
+            )
+            .await?,
+          );
+        }
+        category.clone().unwrap()
+      },
+      "category_id" => {
+        if let None = category {
+          category = Some(
+            get_category(
+              &client,
+              &species,
+              &mon,
+              &generation.clone().unwrap(),
+              &lang.to_string(),
+            )
+            .await?,
+          );
+        }
+        let category_map = HashMap::from([
+          ("Alola", "updated-alola"),
+          ("Hisui", "hisui"),
+          ("Paldea", "paldea"),
+        ]);
+        let category_id = match category.clone().unwrap().as_str() {
+          "Galar" => {
+            let mut result = 0;
+            for (&dex, &start) in ["galar", "isle-of-armor", "crown-tundra"]
+              .iter()
+              .zip([0, 400, 611].iter())
+            {
+              for r_dex in species.pokedex_numbers.iter() {
+                if r_dex.pokedex.name == dex {
+                  result = start + r_dex.entry_number;
+                }
+              }
+            }
+            result
+          },
+          "Paldean Expeditions" => {
+            let mut result = 0;
+            for (&dex, &start) in ["kitakami", "blueberry"].iter().zip([0, 200].iter()) {
+              for r_dex in species.pokedex_numbers.iter() {
+                if r_dex.pokedex.name == dex {
+                  result = start + r_dex.entry_number;
+                }
+              }
+            }
+            result
+          },
+          _ if category_map.contains_key(category.clone().unwrap().as_str()) => {
+            let mut result = 0;
+            let dex = category_map
+              .get(category.clone().unwrap().as_str())
+              .unwrap();
+            for r_dex in species.pokedex_numbers.iter() {
+              if r_dex.pokedex.name == *dex {
+                result = r_dex.entry_number;
+              }
+            }
+            result
+          },
+          _ => species.id,
+        };
+        if category_id == 0 {
+          return Err(cli::error(
+            ErrorKind::InvalidValue,
+            format!("error: failed to retrieve appropriate pokedex ordering"),
+          ));
+        }
+        category_id.to_string()
+      },
+      _ => String::new(),
+    });
   }
-  output.push_str(&format!("{},", types.join(";")));
 
-  // Abilities
-  let mut abilities = Vec::new();
-  for r_ability in mon.abilities.iter() {
-    let mut ability: String = get_name_strict!(follow r_ability.ability, client, lang.to_string())?;
-    if r_ability.is_hidden {
-      ability.push_str("*");
-    }
-    abilities.push(ability);
-  }
-  output.push_str(&format!("{},", abilities.join(";")));
+  Ok(output.join(","))
+}
 
-  // Color
-  output.push_str(&format!(
-    "{},",
-    get_name_strict!(follow species.color, client, lang.to_string())?
-  ));
-
-  // Egg Groups
-  let mut egg_groups = Vec::new();
-  for r_group in species.egg_groups.iter() {
-    egg_groups.push(get_name_strict!(follow r_group, client, lang.to_string())?);
-  }
-  output.push_str(&format!("{},", egg_groups.join(";")));
-
-  // Held Items
-  let mut held_items = Vec::new();
-  for r_item in mon.held_items.iter() {
-    held_items.push(get_name_strict!(follow r_item.item, client, lang.to_string())?);
-  }
-  output.push_str(&format!("{},", held_items.join(";")));
-
-  // Growth Rate
-  output.push_str(&format!("{},", species.growth_rate.name));
-
-  // Gender Rate
-  output.push_str(&format!("{},", species.gender_rate));
-
-  // Base Stats
-  let mut base_stats: Vec<i64> = mon
-    .stats
-    .clone()
-    .into_iter()
-    .map(|stat| stat.base_stat)
-    .collect();
-  base_stats.push(base_stats.iter().sum());
-  output.push_str(&format!(
-    "{},",
-    base_stats
-      .into_iter()
-      .map(|stat| stat.to_string())
-      .collect::<Vec<String>>()
-      .join(";")
-  ));
-
-  // EV Yields
-  let mut ev_yields: Vec<i64> = mon
-    .stats
-    .clone()
-    .into_iter()
-    .map(|stat| stat.effort)
-    .collect();
-  ev_yields.push(ev_yields.iter().sum());
-  output.push_str(&format!(
-    "{},",
-    ev_yields
-      .into_iter()
-      .map(|stat| stat.to_string())
-      .collect::<Vec<String>>()
-      .join(";")
-  ));
-
-  // Hatch Counter
-  output.push_str(&format!(
-    "{},",
-    match species.hatch_counter {
-      Some(hatch_counter) => hatch_counter.to_string(),
-      None => String::from("None"),
-    }
-  ));
-
-  // Base EXP
-  output.push_str(&format!(
-    "{},",
-    match mon.base_experience {
-      Some(base_experience) => base_experience.to_string(),
-      None => String::from("None"),
-    }
-  ));
-
-  // Capture Rate
-  output.push_str(&format!("{},", species.capture_rate));
-
-  // Base Happiness
-  //TODO: typo in rustemon?
-  output.push_str(&format!(
-    "{},",
-    match species.base_hapiness {
-      Some(base_hapiness) => base_hapiness.to_string(),
-      None => String::from("None"),
-    }
-  ));
-
-  // Height
-  output.push_str(&format!("{},", mon.height));
-
-  // Weight
-  output.push_str(&format!("{},", mon.weight));
-
-  // Stage and Evolution Type
-  // TODO: handle exceptions for these values
+async fn get_evo_stage_and_type(
+  client: &RustemonClient,
+  species: &PokemonSpecies,
+) -> Result<(Option<i64>, Option<i64>), clap::Error> {
   let mut stage: i64 = 0;
   let (mut branched, mut branching) = (0, 0);
   if let Some(r_chain) = species.evolution_chain.clone() {
@@ -318,63 +447,16 @@ pub async fn build_pokemon(
       }
     }
   }
-  output.push_str(&format!("{},{},", stage, branching + 2 * branched));
+  Ok((Some(stage), Some(branching + 2 * branched)))
+}
 
-  // Starter
-  output.push_str(&format!(
-    "{},",
-    match species.id {
-      1..10
-      | 152..162
-      | 252..262
-      | 387..397
-      | 495..505
-      | 650..660
-      | 722..732
-      | 810..820
-      | 906..916 => 1,
-      _ if mon.name == "pikachu-starter" || mon.name == "eevee-starter" => 1,
-      _ => 0,
-    }
-  ));
-
-  // Fossil
-  output.push_str(&format!(
-    "{},",
-    match species.id {
-      138..143 | 345..349 | 408..412 | 564..568 | 696..700 | 880..884 => 1,
-      _ => 0,
-    }
-  ));
-
-  // Baby
-  output.push_str(&format!("{},", species.is_baby as i64));
-
-  // Mythical
-  output.push_str(&format!("{},", species.is_mythical as i64));
-
-  // Legendary
-  output.push_str(&format!("{},", species.is_legendary as i64));
-
-  // Ultra Beast
-  output.push_str(&format!(
-    "{},",
-    match species.id {
-      793..800 | 803..807 => 1,
-      _ => 0,
-    }
-  ));
-
-  // Paradox
-  output.push_str(&format!(
-    "{},",
-    match species.id {
-      984..996 | 1005..1011 | 1020..1024 => 1,
-      _ => 0,
-    }
-  ));
-
-  // Category
+async fn get_category(
+  client: &RustemonClient,
+  species: &PokemonSpecies,
+  mon: &Pokemon,
+  generation: &rustemon::model::games::Generation,
+  lang: &str,
+) -> Result<String, clap::Error> {
   let mut category = get_name_strict!(follow generation.main_region, client, lang.to_string())?;
   if mon.name.starts_with("zygarde")
     && ["10", "power-construct", "complete"]
@@ -410,61 +492,7 @@ pub async fn build_pokemon(
   {
     category = String::from("Mega");
   }
-  output.push_str(&format!("{},", category));
-
-  // Category ID
-  let category_map = HashMap::from([
-    ("Alola", "updated-alola"),
-    ("Hisui", "hisui"),
-    ("Paldea", "paldea"),
-  ]);
-  let category_id = match category.as_str() {
-    "Galar" => {
-      let mut result = 0;
-      for (&dex, &start) in ["galar", "isle-of-armor", "crown-tundra"]
-        .iter()
-        .zip([0, 400, 611].iter())
-      {
-        for r_dex in species.pokedex_numbers.iter() {
-          if r_dex.pokedex.name == dex {
-            result = start + r_dex.entry_number;
-          }
-        }
-      }
-      result
-    },
-    "Paldean Expeditions" => {
-      let mut result = 0;
-      for (&dex, &start) in ["kitakami", "blueberry"].iter().zip([0, 200].iter()) {
-        for r_dex in species.pokedex_numbers.iter() {
-          if r_dex.pokedex.name == dex {
-            result = start + r_dex.entry_number;
-          }
-        }
-      }
-      result
-    },
-    _ if category_map.contains_key(category.as_str()) => {
-      let mut result = 0;
-      let dex = category_map.get(category.as_str()).unwrap();
-      for r_dex in species.pokedex_numbers.iter() {
-        if r_dex.pokedex.name == *dex {
-          result = r_dex.entry_number;
-        }
-      }
-      result
-    },
-    _ => species.id,
-  };
-  if category_id == 0 {
-    return Err(cli::error(
-      ErrorKind::InvalidValue,
-      format!("error: failed to retrieve appropriate pokedex ordering"),
-    ));
-  }
-  output.push_str(&format!("{}", category_id));
-
-  Ok(output)
+  Ok(category)
 }
 
 #[cfg(test)]
