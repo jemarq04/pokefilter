@@ -44,8 +44,8 @@ pub enum SubArgs {
     #[arg(short, long, help = "overwrite file, if one exists")]
     force: bool,
 
-    #[arg(long, help = "")]
-    keys: Option<String>,
+    #[arg(long, num_args=1.., value_delimiter=',', help = "")]
+    keys: Option<Vec<String>>,
 
     #[command(flatten)]
     options: BuildOpts,

@@ -7,16 +7,19 @@ use std::collections::HashMap;
 use std::fs::{File, create_dir};
 use std::path::Path;
 
-//TODO: Build command will re-create CSV file containing all filter-able information for pokemon
-//      Add customizability for this feature later on, for now build a default spread (names, stats, etc.)
-
 const LAST_SPECIES_ID: i64 = 1025;
+// Remaining in previous format:
+// Regional Dexes,Past Types,Past Abilities,(Past Stats),
+const DEFAULT_HEADER: &str = "pokemon_id,national_dex,pokemon,species,generation,types,abilities,color,egg_groups,held_items,\
+  growth_rate,gender_rate,base_stats,EV_yields,hatch_counter,base_EXP,capture_rate,base_happiness,height,weight,\
+  stage,evolution_type,is_starter,is_fossil,is_baby,is_mythical,is_legendary,is_UB,is_paradox,category,category_id";
 
 pub async fn build(
   client: &RustemonClient,
   force: bool,
   path: Option<String>,
   options: &crate::utils::cli::BuildOpts,
+  keys: &Option<Vec<String>>,
   lang: LanguageId,
 ) -> Result<(), clap::Error> {
   let path = match path {
@@ -64,14 +67,12 @@ pub async fn build(
     },
   };
 
-  // Remaining in previous format:
-  // Regional Dexes,Past Types,Past Abilities,(Past Stats),
-  const DEFAULT_HEADER: &str = "pokemon_id,national_dex,pokemon,species,generation,types,abilities,color,egg_groups,held_items,\
-    growth_rate,gender_rate,base_stats,EV_yields,hatch_counter,base_EXP,capture_rate,base_happiness,height,weight,\
-    stage,evolution_type,is_starter,is_fossil,is_baby,is_mythical,is_legendary,is_UB,is_paradox,category,category_id";
-  let keys = DEFAULT_HEADER.split(",").collect::<Vec<&str>>();
+  let keys = match keys {
+    None => DEFAULT_HEADER.split(",").collect::<Vec<&str>>(),
+    Some(k) => k.into_iter().map(|x| x.as_str()).collect::<Vec<&str>>(),
+  };
 
-  helpers::fwriteln(&mut outfile, &path.display(), DEFAULT_HEADER)?;
+  helpers::fwriteln(&mut outfile, &path.display(), &keys.join(","))?;
 
   let mut start = 1;
   let mut end = LAST_SPECIES_ID;
@@ -434,9 +435,13 @@ pub async fn build_pokemon(
         category_id.to_string()
       },
       _ => {
+        let valid = cli::VALID;
         return Err(cli::error(
           ErrorKind::InvalidValue,
-          format!("error: invalid key: {}", key),
+          format!(
+            "error: invalid key: {}\n\n{valid}tip:{valid:#} valid options are {}",
+            key, DEFAULT_HEADER
+          ),
         ));
       },
     });

@@ -42,9 +42,9 @@ async fn main() {
       output,
       lang,
       options,
-      keys: _,
+      keys,
     } => {
-      if let Err(e) = filter::build(&client, force, output, &options, lang).await {
+      if let Err(e) = filter::build(&client, force, output, &options, &keys, lang).await {
         e.exit();
       }
     },
