@@ -256,16 +256,16 @@ pub async fn build_pokemon(
       // Height/Weight
       "height" => mon.height.to_string(),
       "weight" => mon.weight.to_string(),
-      // Stage and Evolution Type (TODO: handle exceptions)
+      // Stage and Evolution Type
       "stage" => {
         if let None = stage {
-          (stage, evolution_type) = get_evo_stage_and_type(&client, &species).await?;
+          (stage, evolution_type) = get_evo_stage_and_type(&client, &species, &mon).await?;
         }
         stage.unwrap().to_string()
       },
       "evolution_type" => {
         if let None = evolution_type {
-          (stage, evolution_type) = get_evo_stage_and_type(&client, &species).await?;
+          (stage, evolution_type) = get_evo_stage_and_type(&client, &species, &mon).await?;
         }
         evolution_type.unwrap().to_string()
       },
@@ -396,56 +396,272 @@ pub async fn build_pokemon(
 async fn get_evo_stage_and_type(
   client: &RustemonClient,
   species: &PokemonSpecies,
+  mon: &Pokemon,
 ) -> Result<(Option<i64>, Option<i64>), clap::Error> {
-  let mut stage: i64 = 0;
-  let (mut branched, mut branching) = (0, 0);
-  if let Some(r_chain) = species.evolution_chain.clone() {
-    let chain = match r_chain.follow(&client).await {
-      Ok(obj) => obj.chain,
-      Err(_) => {
-        return Err(cli::error(
-          ErrorKind::InvalidValue,
-          format!(
-            "API error: could not retrieve evolution_chain for {}",
-            species.name
-          ),
-        ));
-      },
-    };
-    if chain.evolves_to.len() > 0 {
-      let mut found1 = false;
-      for ch1 in chain.evolves_to.iter() {
-        if stage != 0 {
-          break;
-        }
-        if ch1.evolves_to.len() > 0 {
-          let mut found2 = false;
-          for ch2 in ch1.evolves_to.iter() {
-            if ch2.species.name == species.name {
-              stage = 3;
-              branched = (ch1.evolves_to.len() > 1) as i64;
-              found2 = true;
+  let mut stage = 0;
+  let mut branched = 0;
+  let mut branching = 0;
+  match mon.name.as_str() {
+    "pikachu-starter" => {
+      stage = 0;
+      branching = 0;
+      branched = 0;
+    },
+    "pikachu-gmax" => {
+      stage = 0;
+      branching = 0;
+      branched = 0;
+    },
+    "eevee-starter" => {
+      stage = 0;
+      branching = 0;
+      branched = 0;
+    },
+    "eevee-gmax" => {
+      stage = 0;
+      branching = 0;
+      branched = 0;
+    },
+    "meowth" => {
+      stage = 1;
+      branching = 0;
+      branched = 0;
+    },
+    "meowth-alola" => {
+      stage = 1;
+      branching = 0;
+      branched = 0;
+    },
+    "meowth-galar" => {
+      stage = 1;
+      branching = 0;
+      branched = 0;
+    },
+    "meowth-gmax" => {
+      stage = 1;
+      branching = 0;
+      branched = 0;
+    },
+    "persian" => {
+      stage = 3;
+      branching = 0;
+      branched = 0;
+    },
+    "persian-alola" => {
+      stage = 3;
+      branching = 0;
+      branched = 0;
+    },
+    "perrserker" => {
+      stage = 3;
+      branching = 0;
+      branched = 0;
+    },
+    "farfetchd-galar" => {
+      stage = 1;
+      branching = 0;
+      branched = 0;
+    },
+    "sirfetchd" => {
+      stage = 3;
+      branching = 0;
+      branched = 0;
+    },
+    "mr-mime" => {
+      stage = 3;
+      branching = 0;
+      branched = 0;
+    },
+    "mr-mime-galar" => {
+      stage = 1;
+      branching = 0;
+      branched = 0;
+    },
+    "mr-rime" => {
+      stage = 3;
+      branching = 0;
+      branched = 0;
+    },
+    "wooper" => {
+      stage = 1;
+      branching = 0;
+      branched = 0;
+    },
+    "wooper-paldea" => {
+      stage = 1;
+      branching = 0;
+      branched = 0;
+    },
+    "quagsire" => {
+      stage = 3;
+      branching = 0;
+      branched = 0;
+    },
+    "clodsire" => {
+      stage = 3;
+      branching = 0;
+      branched = 0;
+    },
+    "qwilfish" => {
+      stage = 0;
+      branching = 0;
+      branched = 0;
+    },
+    "qwilfish-hisui" => {
+      stage = 1;
+      branching = 0;
+      branched = 0;
+    },
+    "overqwil" => {
+      stage = 3;
+      branching = 0;
+      branched = 0;
+    },
+    "sneasel" => {
+      stage = 1;
+      branching = 0;
+      branched = 0;
+    },
+    "sneasel-hisui" => {
+      stage = 1;
+      branching = 0;
+      branched = 0;
+    },
+    "weavile" => {
+      stage = 3;
+      branching = 0;
+      branched = 0;
+    },
+    "sneasler" => {
+      stage = 3;
+      branching = 0;
+      branched = 0;
+    },
+    "corsola" => {
+      stage = 0;
+      branching = 0;
+      branched = 0;
+    },
+    "corsola-galar" => {
+      stage = 1;
+      branching = 0;
+      branched = 0;
+    },
+    "cursola" => {
+      stage = 3;
+      branching = 0;
+      branched = 0;
+    },
+    "zigzagoon" => {
+      stage = 1;
+      branching = 0;
+      branched = 0;
+    },
+    "zigzagoon-galar" => {
+      stage = 1;
+      branching = 0;
+      branched = 0;
+    },
+    "linoone" => {
+      stage = 3;
+      branching = 0;
+      branched = 0;
+    },
+    "linoone-galar" => {
+      stage = 2;
+      branching = 0;
+      branched = 0;
+    },
+    "obstagoon" => {
+      stage = 3;
+      branching = 0;
+      branched = 0;
+    },
+    "yamask" => {
+      stage = 1;
+      branching = 0;
+      branched = 0;
+    },
+    "yamask-galar" => {
+      stage = 1;
+      branching = 0;
+      branched = 0;
+    },
+    "cofagrigus" => {
+      stage = 3;
+      branching = 0;
+      branched = 0;
+    },
+    "runerigus" => {
+      stage = 3;
+      branching = 0;
+      branched = 0;
+    },
+    "basculin-red-striped" => {
+      stage = 0;
+      branching = 0;
+      branched = 0;
+    },
+    "basculin-blue-striped" => {
+      stage = 0;
+      branching = 0;
+      branched = 0;
+    },
+    "basculin-white-striped" => {
+      stage = 1;
+      branching = 0;
+      branched = 0;
+    },
+    _ => {
+      if let Some(r_chain) = species.evolution_chain.clone() {
+        let chain = match r_chain.follow(&client).await {
+          Ok(obj) => obj.chain,
+          Err(_) => {
+            return Err(cli::error(
+              ErrorKind::InvalidValue,
+              format!(
+                "API error: could not retrieve evolution_chain for {}",
+                species.name
+              ),
+            ));
+          },
+        };
+        if chain.evolves_to.len() > 0 {
+          let mut found1 = false;
+          for ch1 in chain.evolves_to.iter() {
+            if stage != 0 {
               break;
             }
+            if ch1.evolves_to.len() > 0 {
+              let mut found2 = false;
+              for ch2 in ch1.evolves_to.iter() {
+                if ch2.species.name == species.name {
+                  stage = 3;
+                  branched = (ch1.evolves_to.len() > 1) as i64;
+                  found2 = true;
+                  break;
+                }
+              }
+              if !found2 {
+                if ch1.species.name == species.name {
+                  stage = 2;
+                  branching = (ch1.evolves_to.len() > 1) as i64;
+                  branched = (chain.evolves_to.len() > 1) as i64;
+                  found1 = true;
+                  break;
+                }
+              }
+            }
           }
-          if !found2 {
-            if ch1.species.name == species.name {
-              stage = 2;
-              branching = (ch1.evolves_to.len() > 1) as i64;
-              branched = (chain.evolves_to.len() > 1) as i64;
-              found1 = true;
-              break;
+          if !found1 {
+            if chain.species.name == species.name {
+              stage = 1;
+              branching = (chain.evolves_to.len() > 1) as i64;
             }
           }
         }
       }
-      if !found1 {
-        if chain.species.name == species.name {
-          stage = 1;
-          branching = (chain.evolves_to.len() > 1) as i64;
-        }
-      }
-    }
+    },
   }
   Ok((Some(stage), Some(branching + 2 * branched)))
 }
