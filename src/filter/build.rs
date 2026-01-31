@@ -339,6 +339,20 @@ pub async fn build_pokemon(
       },
       // Category/Category ID (TODO: error check)
       "category" => {
+        if let None = generation {
+          generation = Some(match species.generation.follow(&client).await {
+            Ok(obj) => obj,
+            Err(_) => {
+              return Err(cli::error(
+                ErrorKind::InvalidValue,
+                format!(
+                  "API error: could not retrieve generation {}",
+                  species.generation.name
+                ),
+              ));
+            },
+          });
+        }
         if let None = category {
           category = Some(
             get_category(
