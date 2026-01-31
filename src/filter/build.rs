@@ -10,10 +10,13 @@ use std::path::Path;
 //TODO: Build command will re-create CSV file containing all filter-able information for pokemon
 //      Add customizability for this feature later on, for now build a default spread (names, stats, etc.)
 
+const LAST_SPECIES_ID: i64 = 1025;
+
 pub async fn build(
   client: &RustemonClient,
   force: bool,
   path: Option<String>,
+  options: &crate::utils::cli::BuildOpts,
   lang: LanguageId,
 ) -> Result<(), clap::Error> {
   let path = match path {
@@ -70,30 +73,60 @@ pub async fn build(
 
   helpers::fwriteln(&mut outfile, &path.display(), DEFAULT_HEADER)?;
 
-  let r_all_species = match rustemon::pokemon::pokemon_species::get_all_entries(&client).await {
-    Ok(list) => list,
-    Err(_) => {
-      return Err(cli::error(
-        ErrorKind::InvalidValue,
-        String::from("API error: could not retrieve all pokemon species"),
-      ));
-    },
-  };
-
-  let end = 151;
-  for r_species in r_all_species.iter() {
-    let species = match r_species.follow(&client).await {
+  let mut start = 1;
+  let mut end = LAST_SPECIES_ID;
+  if let Some(pokemon) = &options.pokemon {
+    let species = match rustemon::pokemon::pokemon_species::get_by_name(&pokemon, &client).await {
       Ok(obj) => obj,
       Err(_) => {
         return Err(cli::error(
           ErrorKind::InvalidValue,
-          format!("API error: could not retrieve species {}", r_species.name),
+          format!("API error: could not retrieve species {}", pokemon),
         ));
       },
     };
-    if species.id > end {
-      break;
-    }
+    start = species.id;
+    end = species.id;
+  } else if let Some(pokerange) = &options.pokerange {
+    let species_start =
+      match rustemon::pokemon::pokemon_species::get_by_name(&pokerange[0], &client).await {
+        Ok(obj) => obj,
+        Err(_) => {
+          return Err(cli::error(
+            ErrorKind::InvalidValue,
+            format!("API error: could not retrieve species {}", pokerange[0]),
+          ));
+        },
+      };
+    let species_end =
+      match rustemon::pokemon::pokemon_species::get_by_name(&pokerange[1], &client).await {
+        Ok(obj) => obj,
+        Err(_) => {
+          return Err(cli::error(
+            ErrorKind::InvalidValue,
+            format!("API error: could not retrieve species {}", pokerange[1]),
+          ));
+        },
+      };
+    start = species_start.id;
+    end = species_end.id;
+  } else if let Some(dexnum) = options.dexnum {
+    start = dexnum;
+    end = dexnum;
+  } else if let Some(dexrange) = &options.dexrange {
+    start = dexrange[0];
+    end = dexrange[1];
+  }
+  for id in start..=end {
+    let species = match rustemon::pokemon::pokemon_species::get_by_id(id, &client).await {
+      Ok(obj) => obj,
+      Err(_) => {
+        return Err(cli::error(
+          ErrorKind::InvalidValue,
+          format!("API error: could not retrieve species with ID {}", id),
+        ));
+      },
+    };
 
     for variety in species.varieties.iter() {
       let mon = match variety.pokemon.follow(&client).await {

@@ -1,6 +1,6 @@
 use crate::utils::enums::*;
 use clap::builder::styling::{AnsiColor, Effects, Style, Styles};
-use clap::{CommandFactory, Parser, Subcommand};
+use clap::{Args, CommandFactory, Parser, Subcommand};
 
 pub const HEADER: Style = AnsiColor::Green.on_default().effects(Effects::BOLD);
 pub const USAGE: Style = AnsiColor::Green.on_default().effects(Effects::BOLD);
@@ -44,8 +44,14 @@ pub enum SubArgs {
     #[arg(short, long, help = "overwrite file, if one exists")]
     force: bool,
 
+    #[arg(long, help = "")]
+    keys: Option<String>,
+
+    #[command(flatten)]
+    options: BuildOpts,
+
     #[arg(short, long, help = "")]
-    path: Option<String>,
+    output: Option<String>,
 
     #[arg(value_enum,
       short = 'L',
@@ -57,6 +63,25 @@ pub enum SubArgs {
     )]
     lang: LanguageId,
   },
+}
+
+#[derive(Args, Debug)]
+#[group(required = true, multiple = false)]
+pub struct BuildOpts {
+  #[arg(short, long, help = "")]
+  pub all: bool,
+
+  #[arg(short, long, help = "")]
+  pub pokemon: Option<String>,
+
+  #[arg(short = 'P', long, num_args = 2, help = "")]
+  pub pokerange: Option<Vec<String>>,
+
+  #[arg(short = 'n', long, help = "")]
+  pub dexnum: Option<i64>,
+
+  #[arg(short = 'N', long, num_args = 2, help = "")]
+  pub dexrange: Option<Vec<i64>>,
 }
 
 pub fn get_appname() -> String {

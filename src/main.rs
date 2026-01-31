@@ -37,8 +37,14 @@ async fn main() {
 
   // Call the appropriate subcommand for results
   match args.command {
-    SubArgs::BuildCmd { force, path, lang } => {
-      if let Err(e) = filter::build(&client, force, path, lang).await {
+    SubArgs::BuildCmd {
+      force,
+      output,
+      lang,
+      options,
+      keys: _,
+    } => {
+      if let Err(e) = filter::build(&client, force, output, &options, lang).await {
         e.exit();
       }
     },
