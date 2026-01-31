@@ -24,7 +24,7 @@ const CARGO_STYLING: Styles = Styles::styled()
 /// Placeholder
 #[derive(Parser, Debug)]
 #[command(version, long_about, styles=CARGO_STYLING)]
-pub struct Args {
+pub struct CliArgs {
   #[arg(
     long,
     value_name = "DIR",
@@ -60,9 +60,9 @@ pub enum SubArgs {
 }
 
 pub fn get_appname() -> String {
-  String::from(Args::command().get_name())
+  String::from(CliArgs::command().get_name())
 }
 
 pub fn error(kind: clap::error::ErrorKind, message: String) -> clap::Error {
-  Args::command().error(kind, message)
+  CliArgs::command().error(kind, message)
 }
