@@ -44,13 +44,14 @@ pub enum SubArgs {
     #[arg(short, long, help = "overwrite file, if one exists")]
     force: bool,
 
-    #[arg(long, num_args=1.., value_delimiter=',', help = "")]
+    #[arg(short, long, num_args=1.., value_delimiter=',', help = "list of comma-separated keys of information to save for each Pokemon")]
     keys: Option<Vec<String>>,
 
     #[command(flatten)]
     options: BuildOpts,
 
-    #[arg(short, long, help = "")]
+    // TODO: change to directory to also house the config options?
+    #[arg(short, long, help = "output file path for CSV file")]
     output: Option<String>,
 
     #[arg(value_enum,
@@ -68,19 +69,46 @@ pub enum SubArgs {
 #[derive(clap::Args, Debug)]
 #[group(required = true, multiple = false)]
 pub struct BuildOpts {
-  #[arg(short, long, help = "")]
+  #[arg(
+    short,
+    long,
+    help_heading = "Range",
+    help = "print information for all Pokemon"
+  )]
   pub all: bool,
 
-  #[arg(short, long, help = "")]
+  #[arg(
+    short,
+    long,
+    help_heading = "Range",
+    help = "print information for specified Pokemon"
+  )]
   pub pokemon: Option<String>,
 
-  #[arg(short = 'P', long, num_args = 2, help = "")]
+  #[arg(
+    short = 'P',
+    long,
+    num_args = 2,
+    help_heading = "Range",
+    help = "print information for all between the specified Pokemon"
+  )]
   pub pokerange: Option<Vec<String>>,
 
-  #[arg(short = 'n', long, help = "")]
+  #[arg(
+    short = 'n',
+    long,
+    help_heading = "Range",
+    help = "print information for Pokemon with the specified national Pokedex number"
+  )]
   pub dexnum: Option<i64>,
 
-  #[arg(short = 'N', long, num_args = 2, help = "")]
+  #[arg(
+    short = 'N',
+    long,
+    num_args = 2,
+    help_heading = "Range",
+    help = "print information for all between the specified national Pokedex numbers"
+  )]
   pub dexrange: Option<Vec<i64>>,
 }
 
