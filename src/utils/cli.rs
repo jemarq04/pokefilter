@@ -1,6 +1,6 @@
 use crate::utils::enums::*;
 use clap::builder::styling::{AnsiColor, Effects, Style, Styles};
-use clap::{Args, CommandFactory, Parser, Subcommand};
+use clap::{CommandFactory, Parser, Subcommand};
 
 pub const HEADER: Style = AnsiColor::Green.on_default().effects(Effects::BOLD);
 pub const USAGE: Style = AnsiColor::Green.on_default().effects(Effects::BOLD);
@@ -24,7 +24,7 @@ const CARGO_STYLING: Styles = Styles::styled()
 /// Placeholder
 #[derive(Parser, Debug)]
 #[command(version, long_about, styles=CARGO_STYLING)]
-pub struct CliArgs {
+pub struct Args {
   #[arg(
     long,
     value_name = "DIR",
@@ -65,7 +65,7 @@ pub enum SubArgs {
   },
 }
 
-#[derive(Args, Debug)]
+#[derive(clap::Args, Debug)]
 #[group(required = true, multiple = false)]
 pub struct BuildOpts {
   #[arg(short, long, help = "")]
@@ -85,9 +85,9 @@ pub struct BuildOpts {
 }
 
 pub fn get_appname() -> String {
-  String::from(CliArgs::command().get_name())
+  String::from(Args::command().get_name())
 }
 
 pub fn error(kind: clap::error::ErrorKind, message: String) -> clap::Error {
-  CliArgs::command().error(kind, message)
+  Args::command().error(kind, message)
 }

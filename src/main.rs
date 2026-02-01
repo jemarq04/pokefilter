@@ -3,11 +3,11 @@ mod utils;
 
 use clap::Parser;
 use rustemon::client::RustemonClient;
-use utils::cli::{CliArgs, SubArgs, get_appname};
+use utils::cli::{Args, SubArgs, get_appname};
 
 #[tokio::main]
 async fn main() {
-  let mut args = CliArgs::parse();
+  let mut args = Args::parse();
 
   // Create cache directory for API calls
   if let None = args.cache_dir {
