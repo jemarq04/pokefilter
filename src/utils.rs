@@ -189,7 +189,7 @@ mod tests {
     };
 
     // Generate ValueEnums from respective endpoints
-    let derive_line = last_line;
+    let _derive_line = last_line;
 
     // -> LanguageId
     write_line("pub enum LanguageId {");
