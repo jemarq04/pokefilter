@@ -37,14 +37,18 @@ pub enum SubArgs {
     #[arg(short, long, help = "overwrite file, if one exists")]
     force: bool,
 
-    #[arg(short, long, num_args=1.., value_delimiter=',', help = "list of comma-separated keys of information to save for each Pokemon")]
+    #[arg(short, long, num_args=1.., value_name = "KEY1,KEY2,..", value_delimiter=',', help = "list of comma-separated keys of information to save for each Pokemon")]
     keys: Option<Vec<String>>,
 
     #[command(flatten)]
     options: BuildOpts,
 
-    // TODO: change to directory to also house the config options?
-    #[arg(short, long, help = "output file path for CSV file")]
+    #[arg(
+      short,
+      long,
+      value_name = "PATH",
+      help = "output file path for CSV file"
+    )]
     output: Option<String>,
 
     #[arg(value_enum,
