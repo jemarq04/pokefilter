@@ -15,14 +15,16 @@ const DEFAULT_HEADER: &str = "pokemon_id,national_dex,pokemon,species,generation
   stage,evolution_type,is_starter,is_fossil,is_baby,is_mythical,is_legendary,is_UB,is_paradox,category,category_id";
 
 pub async fn build(
-  client: &RustemonClient,
   force: bool,
-  path: Option<String>,
+  filepath: Option<String>,
   options: &crate::utils::cli::BuildOpts,
   keys: &Option<Vec<String>>,
   lang: LanguageId,
+  cache_dir: Option<std::path::PathBuf>,
 ) -> Result<(), clap::Error> {
-  let path = match path {
+  let client = helpers::create_client(cache_dir);
+
+  let filepath = match filepath {
     Some(p) => p,
     None => match std::env::home_dir() {
       Some(home) => {
@@ -44,25 +46,25 @@ pub async fn build(
       },
     },
   };
-  let path = Path::new(&path);
-  if path.exists() && !force {
+  let filepath = Path::new(&filepath);
+  if filepath.exists() && !force {
     let valid = cli::VALID;
     return Err(cli::error(
       ErrorKind::InvalidValue,
       format!(
         "error: file {} already exists\n\n{valid}tip:{valid:#} to overwrite it, run '{} build --force'",
-        path.display(),
+        filepath.display(),
         cli::get_appname()
       ),
     ));
   }
 
-  let mut outfile = match File::create(&path) {
+  let mut outfile = match File::create(&filepath) {
     Ok(file) => file,
     Err(why) => {
       return Err(cli::error(
         ErrorKind::InvalidValue,
-        format!("error creating file {}: {}", path.display(), why),
+        format!("error creating file {}: {}", filepath.display(), why),
       ));
     },
   };
@@ -72,7 +74,7 @@ pub async fn build(
     Some(k) => k.into_iter().map(|x| x.as_str()).collect::<Vec<&str>>(),
   };
 
-  helpers::fwriteln(&mut outfile, &path.display(), &keys.join(","))?;
+  helpers::fwriteln(&mut outfile, &filepath.display(), &keys.join(","))?;
 
   let mut start = 1;
   let mut end = LAST_SPECIES_ID;
@@ -145,7 +147,7 @@ pub async fn build(
       println!("Building {}...", mon.name);
       helpers::fwriteln(
         &mut outfile,
-        &path.display(),
+        &filepath.display(),
         &build_pokemon(&client, &species, &mon, lang, &keys).await?,
       )?;
     }

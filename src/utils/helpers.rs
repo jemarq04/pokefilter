@@ -4,7 +4,9 @@ use clap::error::ErrorKind;
 use futures::future;
 use rustemon::Follow;
 use rustemon::client::RustemonClient;
-use std::{fs::File, io::prelude::*, path::Display};
+use std::fs::{File, create_dir};
+use std::io::prelude::*;
+use std::path::{Display, Path};
 
 pub async fn get_pokemon_name(
   client: &RustemonClient,
@@ -50,4 +52,43 @@ pub fn fwriteln(outfile: &mut File, display: &Display, content: &str) -> Result<
     ));
   }
   Ok(())
+}
+
+pub fn create_client(cache_dir: Option<std::path::PathBuf>) -> RustemonClient {
+  // Create cache directory for API calls
+  let cache_dir = match cache_dir {
+    Some(p) => Some(p),
+    None => match std::env::home_dir() {
+      Some(home) => {
+        let dirpath = format!("{}/.cache", home.display());
+        let dirpath = Path::new(&dirpath);
+        let mut result = Some(format!("{}/{}", dirpath.display(), cli::get_appname()).into());
+        if !dirpath.exists() {
+          if let Err(_) = create_dir(dirpath) {
+            result = None;
+          }
+        }
+        result
+      },
+      None => None,
+    },
+  };
+  match cache_dir {
+    Some(path) => {
+      match rustemon::client::RustemonClientBuilder::default()
+        .with_manager(rustemon::client::CACacheManager::new(path, false))
+        .try_build()
+      {
+        Ok(cl) => cl,
+        Err(_) => {
+          eprintln!("warning: cache directory set to cache manager default");
+          RustemonClient::default()
+        },
+      }
+    },
+    None => {
+      eprintln!("warning: cache directory set to cache manager default");
+      RustemonClient::default()
+    },
+  }
 }

@@ -25,13 +25,6 @@ const CARGO_STYLING: Styles = Styles::styled()
 #[derive(Parser, Debug)]
 #[command(version, long_about, styles=CARGO_STYLING)]
 pub struct Args {
-  #[arg(
-    long,
-    value_name = "DIR",
-    help = "cache directory for API calls (default: ~/.cache/pokelookup/)"
-  )]
-  pub cache_dir: Option<std::path::PathBuf>,
-
   #[command(subcommand)]
   pub command: SubArgs,
 }
@@ -63,6 +56,13 @@ pub enum SubArgs {
       help = "language ID for API requests for formatted names"
     )]
     lang: LanguageId,
+
+    #[arg(
+      long,
+      value_name = "DIR",
+      help = "cache directory for API calls (default: ~/.cache/pokefilter/)"
+    )]
+    cache_dir: Option<std::path::PathBuf>,
   },
 }
 
