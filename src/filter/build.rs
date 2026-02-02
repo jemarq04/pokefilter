@@ -771,4 +771,20 @@ async fn get_category(
 #[cfg(test)]
 mod tests {
   use super::*;
+
+  #[tokio::test]
+  async fn test_latest_generation() {
+    let client = RustemonClient::default();
+
+    let mut all_species = rustemon::pokemon::pokemon_species::get_all_entries(&client)
+      .await
+      .unwrap();
+    match all_species.pop() {
+      Some(r_species) => {
+        let species = r_species.follow(&client).await.unwrap();
+        assert_eq!(species.id, LAST_SPECIES_ID);
+      },
+      None => panic!("Could not retrieve species resources"),
+    };
+  }
 }
