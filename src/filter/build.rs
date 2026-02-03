@@ -15,9 +15,9 @@ const DEFAULT_HEADER: &str = "pokemon_id,national_dex,pokemon,species,generation
   stage,evolution_type,is_starter,is_fossil,is_baby,is_mythical,is_legendary,is_UB,is_paradox,category,category_id";
 
 pub async fn build(
+  filepath: Option<std::path::PathBuf>,
   force: bool,
-  filepath: Option<String>,
-  options: &crate::utils::cli::BuildOpts,
+  range_opts: cli::BuildOpts,
   keys: &Option<Vec<String>>,
   lang: LanguageId,
   cache_dir: Option<std::path::PathBuf>,
@@ -26,28 +26,25 @@ pub async fn build(
 
   let filepath = match filepath {
     Some(p) => p,
-    None => match std::env::home_dir() {
-      Some(home) => {
-        let dirpath = format!("{}/.pokefilter", home.display());
+    None => {
+      let mut result = String::new();
+      if let Some(home) = std::env::home_dir() {
+        let dirpath = format!("{}/.{}", home.display(), cli::get_appname());
         let dirpath = Path::new(&dirpath);
-        if !dirpath.exists() {
-          if let Err(why) = create_dir(dirpath) {
-            return Err(cli::error(
-              ErrorKind::InvalidValue,
-              format!("error creating directory {}: {}", dirpath.display(), why),
-            ));
-          }
+        if dirpath.exists() || matches!(create_dir(dirpath), Ok(_)) {
+          result = format!("{}/pokeinfo.csv", dirpath.display());
         }
-        format!("{}/.pokefilter/pokeinfo.csv", home.display())
-      },
-      None => {
+      }
+      if result.is_empty() {
         eprintln!("warning: CSV file will be built in working directory");
-        String::from("pokeinfo.csv")
-      },
-    },
+        result = String::from("pokeinfo.csv");
+      }
+      result
+    }
+    .into(),
   };
   let filepath = Path::new(&filepath);
-  if filepath.exists() && !force {
+  if !force && filepath.exists() {
     let valid = cli::VALID;
     return Err(cli::error(
       ErrorKind::InvalidValue,
@@ -78,7 +75,7 @@ pub async fn build(
 
   let mut start = 1;
   let mut end = LAST_SPECIES_ID;
-  if let Some(pokemon) = &options.pokemon {
+  if let Some(pokemon) = &range_opts.pokemon {
     let species = match rustemon::pokemon::pokemon_species::get_by_name(&pokemon, &client).await {
       Ok(obj) => obj,
       Err(_) => {
@@ -90,7 +87,7 @@ pub async fn build(
     };
     start = species.id;
     end = species.id;
-  } else if let Some(pokerange) = &options.pokerange {
+  } else if let Some(pokerange) = &range_opts.pokerange {
     let species_start =
       match rustemon::pokemon::pokemon_species::get_by_name(&pokerange[0], &client).await {
         Ok(obj) => obj,
@@ -113,10 +110,10 @@ pub async fn build(
       };
     start = species_start.id;
     end = species_end.id;
-  } else if let Some(dexnum) = options.dexnum {
+  } else if let Some(dexnum) = range_opts.dexnum {
     start = dexnum;
     end = dexnum;
-  } else if let Some(dexrange) = &options.dexrange {
+  } else if let Some(dexrange) = &range_opts.dexrange {
     start = dexrange[0];
     end = dexrange[1];
   }

@@ -58,37 +58,26 @@ pub fn create_client(cache_dir: Option<std::path::PathBuf>) -> RustemonClient {
   // Create cache directory for API calls
   let cache_dir = match cache_dir {
     Some(p) => Some(p),
-    None => match std::env::home_dir() {
-      Some(home) => {
+    None => {
+      let mut result = None;
+      if let Some(home) = std::env::home_dir() {
         let dirpath = format!("{}/.cache", home.display());
         let dirpath = Path::new(&dirpath);
-        let mut result = Some(format!("{}/{}", dirpath.display(), cli::get_appname()).into());
-        if !dirpath.exists() {
-          if let Err(_) = create_dir(dirpath) {
-            result = None;
-          }
+        if dirpath.exists() || matches!(create_dir(dirpath), Ok(_)) {
+          result = Some(format!("{}/{}", dirpath.display(), cli::get_appname()).into());
         }
-        result
-      },
-      None => None,
+      }
+      result
     },
   };
-  match cache_dir {
-    Some(path) => {
-      match rustemon::client::RustemonClientBuilder::default()
-        .with_manager(rustemon::client::CACacheManager::new(path, false))
-        .try_build()
-      {
-        Ok(cl) => cl,
-        Err(_) => {
-          eprintln!("warning: cache directory set to cache manager default");
-          RustemonClient::default()
-        },
-      }
-    },
-    None => {
-      eprintln!("warning: cache directory set to cache manager default");
-      RustemonClient::default()
-    },
+  if let Some(path) = cache_dir
+    && let Ok(client) = rustemon::client::RustemonClientBuilder::default()
+      .with_manager(rustemon::client::CACacheManager::new(path, false))
+      .try_build()
+  {
+    client
+  } else {
+    eprintln!("warning: cache directory set to cache manager default");
+    RustemonClient::default()
   }
 }

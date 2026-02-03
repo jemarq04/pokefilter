@@ -41,7 +41,7 @@ pub enum SubArgs {
     keys: Option<Vec<String>>,
 
     #[command(flatten)]
-    options: BuildOpts,
+    range_opts: BuildOpts,
 
     #[arg(
       short,
@@ -49,7 +49,7 @@ pub enum SubArgs {
       value_name = "PATH",
       help = "output file path for CSV file"
     )]
-    output: Option<String>,
+    output: Option<std::path::PathBuf>,
 
     #[arg(value_enum,
       short = 'L',

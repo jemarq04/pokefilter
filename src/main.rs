@@ -11,14 +11,14 @@ async fn main() {
   // Call the appropriate subcommand for results
   match args.command {
     SubArgs::BuildCmd {
+      output: filepath,
       force,
-      output,
-      lang,
-      options,
+      range_opts,
       keys,
+      lang,
       cache_dir,
     } => {
-      if let Err(e) = filter::build(force, output, &options, &keys, lang, cache_dir).await {
+      if let Err(e) = filter::build(filepath, force, range_opts, &keys, lang, cache_dir).await {
         e.exit();
       }
     },
