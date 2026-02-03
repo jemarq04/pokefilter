@@ -12,7 +12,7 @@ const LAST_SPECIES_ID: i64 = 1025;
 // Regional Dexes,Past Types,Past Abilities,(Past Stats),
 const DEFAULT_HEADER: &str = "pokemon_id,national_dex,pokemon,species,generation,types,abilities,color,egg_groups,held_items,\
   growth_rate,gender_rate,base_stats,EV_yields,hatch_counter,base_EXP,capture_rate,base_happiness,height,weight,\
-  stage,evolution_type,is_starter,is_fossil,is_baby,is_mythical,is_legendary,is_UB,is_paradox,category,category_id";
+  stage,is_branched,is_branching,is_starter,is_fossil,is_baby,is_mythical,is_legendary,is_UB,is_paradox,category,category_id";
 
 pub async fn build(
   filepath: Option<std::path::PathBuf>,
@@ -172,12 +172,13 @@ pub async fn build_pokemon(
   /*
   const DEFAULT_HEADER: &str = "pokemon_id,national_dex,pokemon,species,generation,types,abilities,color,egg_groups,held_items,\
     growth_rate,gender_rate,base_stats,EV_yields,hatch_counter,base_EXP,capture_rate,base_happiness,height,weight,\
-    stage,evolution_type,is_starter,is_fossil,is_baby,is_mythical,is_legendary,is_UB,is_paradox,category,category_id";
+    stage,is_branched,is_branching,is_starter,is_fossil,is_baby,is_mythical,is_legendary,is_UB,is_paradox,category,category_id";
   */
 
   let mut generation = None;
   let mut stage = None;
-  let mut evolution_type = None;
+  let mut is_branched = None;
+  let mut is_branching = None;
   let mut category = None;
   for key in keys.iter() {
     output.push(match *key {
@@ -300,15 +301,24 @@ pub async fn build_pokemon(
       // Stage and Evolution Type
       "stage" => {
         if let None = stage {
-          (stage, evolution_type) = get_evo_stage_and_type(&client, &species, &mon).await?;
+          (stage, is_branched, is_branching) =
+            get_evo_stage_and_type(&client, &species, &mon).await?;
         }
         stage.unwrap().to_string()
       },
-      "evolution_type" => {
-        if let None = evolution_type {
-          (stage, evolution_type) = get_evo_stage_and_type(&client, &species, &mon).await?;
+      "is_branched" => {
+        if let None = is_branched {
+          (stage, is_branched, is_branching) =
+            get_evo_stage_and_type(&client, &species, &mon).await?;
         }
-        evolution_type.unwrap().to_string()
+        (is_branched.unwrap() as i64).to_string()
+      },
+      "is_branching" => {
+        if let None = is_branching {
+          (stage, is_branched, is_branching) =
+            get_evo_stage_and_type(&client, &species, &mon).await?;
+        }
+        (is_branching.unwrap() as i64).to_string()
       },
       // Starter
       "is_starter" => match species.id {
@@ -461,7 +471,7 @@ async fn get_evo_stage_and_type(
   client: &RustemonClient,
   species: &PokemonSpecies,
   mon: &Pokemon,
-) -> Result<(Option<i64>, Option<i64>), clap::Error> {
+) -> Result<(Option<i64>, Option<i64>, Option<i64>), clap::Error> {
   let mut stage = 0;
   let mut branched = 0;
   let mut branching = 0;
@@ -729,7 +739,7 @@ async fn get_evo_stage_and_type(
       }
     },
   }
-  Ok((Some(stage), Some(branching + 2 * branched)))
+  Ok((Some(stage), Some(branched), Some(branching)))
 }
 
 async fn get_category(
