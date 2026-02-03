@@ -22,8 +22,10 @@ pub async fn build(
   lang: LanguageId,
   cache_dir: Option<std::path::PathBuf>,
 ) -> Result<(), clap::Error> {
+  // Create client for API requests
   let client = helpers::create_client(cache_dir);
 
+  // If absent, set filepath to default
   let filepath = match filepath {
     Some(p) => p,
     None => {
@@ -43,6 +45,8 @@ pub async fn build(
     }
     .into(),
   };
+
+  // Check if file already exists
   let filepath = Path::new(&filepath);
   if !force && filepath.exists() {
     let valid = cli::VALID;
@@ -56,6 +60,7 @@ pub async fn build(
     ));
   }
 
+  // Create output file
   let mut outfile = match File::create(&filepath) {
     Ok(file) => file,
     Err(why) => {
@@ -66,13 +71,14 @@ pub async fn build(
     },
   };
 
+  // Determine the columns for the output CSV file
   let keys = match keys {
     None => DEFAULT_HEADER.split(",").collect::<Vec<&str>>(),
     Some(k) => k.into_iter().map(|x| x.as_str()).collect::<Vec<&str>>(),
   };
-
   helpers::fwriteln(&mut outfile, &filepath.display(), &keys.join(","))?;
 
+  // Determine appropriate range of pokemon to print
   let mut start = 1;
   let mut end = LAST_SPECIES_ID;
   if let Some(pokemon) = &range_opts.pokemon {
@@ -117,6 +123,8 @@ pub async fn build(
     start = dexrange[0];
     end = dexrange[1];
   }
+
+  // Loop through each ID and print the information for each variety of pokemon species
   for id in start..=end {
     let species = match rustemon::pokemon::pokemon_species::get_by_id(id, &client).await {
       Ok(obj) => obj,
@@ -337,7 +345,7 @@ pub async fn build_pokemon(
         984..996 | 1005..1011 | 1020..1024 => String::from("1"),
         _ => String::from("0"),
       },
-      // Category/Category ID (TODO: error check)
+      // Category/Category ID, matching pkmnquiz.com (TODO: error check)
       "category" => {
         if let None = generation {
           generation = Some(match species.generation.follow(&client).await {
@@ -458,6 +466,7 @@ async fn get_evo_stage_and_type(
   let mut branched = 0;
   let mut branching = 0;
   match mon.name.as_str() {
+    // Handle manual exceptions (limitation of API)
     "pikachu-starter" => {
       stage = 0;
       branching = 0;
@@ -668,6 +677,7 @@ async fn get_evo_stage_and_type(
       branching = 0;
       branched = 0;
     },
+    // Determine evolution stage and if it branches
     _ => {
       if let Some(r_chain) = species.evolution_chain.clone() {
         let chain = match r_chain.follow(&client).await {

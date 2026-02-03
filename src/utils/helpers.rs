@@ -55,7 +55,6 @@ pub fn fwriteln(outfile: &mut File, display: &Display, content: &str) -> Result<
 }
 
 pub fn create_client(cache_dir: Option<std::path::PathBuf>) -> RustemonClient {
-  // Create cache directory for API calls
   let cache_dir = match cache_dir {
     Some(p) => Some(p),
     None => {
