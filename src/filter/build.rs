@@ -290,7 +290,7 @@ pub async fn build_pokemon(
       },
       // Capture Rate
       "capture_rate" => species.capture_rate.to_string(),
-      // Base Happiness (TODO: typo in rustemon)
+      // Base Happiness
       "base_happiness" => match species.base_hapiness {
         Some(base_happiness) => base_happiness.to_string(),
         None => String::from("None"),
@@ -355,7 +355,7 @@ pub async fn build_pokemon(
         984..996 | 1005..1011 | 1020..1024 => String::from("1"),
         _ => String::from("0"),
       },
-      // Category/Category ID, matching pkmnquiz.com (TODO: error check)
+      // Category/Category ID
       "category" => {
         if let None = generation {
           generation = Some(match species.generation.follow(&client).await {
