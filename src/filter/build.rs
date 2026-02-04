@@ -418,9 +418,12 @@ pub async fn build_pokemon(
             }
             result
           },
-          "Paldean Expeditions" => {
+          "Paldea" => {
             let mut result = 0;
-            for (&dex, &start) in ["kitakami", "blueberry"].iter().zip([0, 200].iter()) {
+            for (&dex, &start) in ["paldea", "kitakami", "blueberry"]
+              .iter()
+              .zip([0, 400, 600].iter())
+            {
               for r_dex in species.pokedex_numbers.iter() {
                 if r_dex.pokedex.name == dex {
                   result = start + r_dex.entry_number;
@@ -750,10 +753,11 @@ async fn get_category(
   lang: &str,
 ) -> Result<String, clap::Error> {
   let mut category = get_name_strict!(follow generation.main_region, client, lang.to_string())?;
-  if mon.name.starts_with("zygarde")
+  if (mon.name.starts_with("zygarde")
     && ["10", "power-construct", "complete"]
       .iter()
-      .any(|name| mon.name.contains(*name))
+      .any(|name| mon.name.contains(*name)))
+    || mon.name.contains("-totem")
   {
     category = String::from("Alola");
   } else if let 808..810 = species.id {
@@ -765,9 +769,9 @@ async fn get_category(
   {
     category = String::from("Hisui");
   } else if mon.name == "ursaluna-bloodmoon" || matches!(species.id, 1009..1026) {
-    category = String::from("Paldean Expeditions");
+    category = String::from("Paldea");
   } else {
-    for &name in ["Alola", "Galar", "Hisui", "Paldea", "Totem"].iter() {
+    for &name in ["Alola", "Galar", "Hisui", "Paldea"].iter() {
       if mon.name.contains(&format!("-{}", name.to_lowercase())) && !mon.name.ends_with("-cap") {
         category = String::from(name);
       }
