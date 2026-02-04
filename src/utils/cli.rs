@@ -37,7 +37,13 @@ pub enum SubArgs {
     #[arg(short, long, help = "overwrite file, if one exists")]
     force: bool,
 
-    #[arg(short, long, num_args=1.., value_name = "KEY1,KEY2,..", value_delimiter=',', help = "list of comma-separated keys of information to save for each Pokemon")]
+    #[arg(
+      short,
+      long,
+      value_name = "KEY1,KEY2,..",
+      value_delimiter = ',',
+      help = "list of comma-separated keys of information to save for each Pokemon"
+    )]
     keys: Option<Vec<String>>,
 
     #[command(flatten)]
