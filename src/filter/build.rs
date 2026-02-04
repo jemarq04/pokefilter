@@ -399,11 +399,7 @@ pub async fn build_pokemon(
           );
         }
         // Handle forms for single-dex regions
-        let category_map = HashMap::from([
-          ("Alola", "updated-alola"),
-          ("Hisui", "hisui"),
-          ("Paldea", "paldea"),
-        ]);
+        let category_map = HashMap::from([("Alola", "updated-alola"), ("Hisui", "hisui")]);
         let category_id = match category.clone().unwrap().as_str() {
           // Sorted by all regional dexes for forms
           "Galar" => {
@@ -412,9 +408,13 @@ pub async fn build_pokemon(
               .iter()
               .zip([0, 400, 611].iter())
             {
+              if result > 0 {
+                break;
+              }
               for r_dex in species.pokedex_numbers.iter() {
                 if r_dex.pokedex.name == dex {
                   result = start + r_dex.entry_number;
+                  break;
                 }
               }
             }
@@ -427,9 +427,13 @@ pub async fn build_pokemon(
               .iter()
               .zip([0, 400, 600].iter())
             {
+              if result > 0 {
+                break;
+              }
               for r_dex in species.pokedex_numbers.iter() {
                 if r_dex.pokedex.name == dex {
                   result = start + r_dex.entry_number;
+                  break;
                 }
               }
             }
