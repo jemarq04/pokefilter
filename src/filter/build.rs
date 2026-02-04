@@ -480,6 +480,11 @@ async fn get_evo_stage_and_type(
   species: &PokemonSpecies,
   mon: &Pokemon,
 ) -> Result<(Option<i64>, Option<i64>, Option<i64>), clap::Error> {
+  // Stage
+  //  0: Single-stage pokemon
+  //  1: First pokemon in a multi-stage line
+  //  2: Middle pokemon in a three-stage line
+  //  3: Last pokemon in a multi-stage line
   let mut stage = 0;
   let mut branched = 0;
   let mut branching = 0;
