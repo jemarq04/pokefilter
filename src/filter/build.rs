@@ -398,12 +398,14 @@ pub async fn build_pokemon(
             .await?,
           );
         }
+        // Handle forms for single-dex regions
         let category_map = HashMap::from([
           ("Alola", "updated-alola"),
           ("Hisui", "hisui"),
           ("Paldea", "paldea"),
         ]);
         let category_id = match category.clone().unwrap().as_str() {
+          // Sorted by all regional dexes for forms
           "Galar" => {
             let mut result = 0;
             for (&dex, &start) in ["galar", "isle-of-armor", "crown-tundra"]
@@ -418,6 +420,7 @@ pub async fn build_pokemon(
             }
             result
           },
+          // Sorted by all regional dexes for forms
           "Paldea" => {
             let mut result = 0;
             for (&dex, &start) in ["paldea", "kitakami", "blueberry"]
@@ -432,6 +435,7 @@ pub async fn build_pokemon(
             }
             result
           },
+          // Sorted by the single regional dex for forms
           _ if category_map.contains_key(category.clone().unwrap().as_str()) => {
             let mut result = 0;
             let dex = category_map
@@ -444,6 +448,7 @@ pub async fn build_pokemon(
             }
             result
           },
+          // Otherwise, use national dex number
           _ => species.id,
         };
         if category_id == 0 {
