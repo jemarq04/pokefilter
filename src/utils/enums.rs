@@ -3,11 +3,9 @@ use clap::ValueEnum;
 
 #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Debug, ValueEnum)]
 pub enum LanguageId {
-  #[value(alias = "ja-Hrkt")]
   JaHrkt,
-  Roomaji,
+  JaRoma,
   Ko,
-  #[value(alias = "zh-Hant")]
   ZhHant,
   Fr,
   De,
@@ -16,9 +14,7 @@ pub enum LanguageId {
   En,
   Cs,
   Ja,
-  #[value(alias = "zh-Hans")]
   ZhHans,
-  #[value(alias = "pt-BR")]
-  PtBR,
+  PtBr,
 }
 impl_Display!(LanguageId);

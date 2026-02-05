@@ -25,13 +25,6 @@ const CARGO_STYLING: Styles = Styles::styled()
 #[derive(Parser, Debug)]
 #[command(version, long_about, styles=CARGO_STYLING)]
 pub struct Args {
-  #[arg(
-    long,
-    value_name = "DIR",
-    help = "cache directory for API calls (default: ~/.cache/pokelookup/)"
-  )]
-  pub cache_dir: Option<std::path::PathBuf>,
-
   #[command(subcommand)]
   pub command: SubArgs,
 }
@@ -44,6 +37,26 @@ pub enum SubArgs {
     #[arg(short, long, help = "overwrite file, if one exists")]
     force: bool,
 
+    #[arg(
+      short,
+      long,
+      value_name = "KEY1,KEY2,..",
+      value_delimiter = ',',
+      help = "list of comma-separated keys of information to save for each Pokemon"
+    )]
+    keys: Option<Vec<String>>,
+
+    #[command(flatten)]
+    range_opts: BuildOpts,
+
+    #[arg(
+      short,
+      long,
+      value_name = "PATH",
+      help = "output file path for CSV file"
+    )]
+    output: Option<std::path::PathBuf>,
+
     #[arg(value_enum,
       short = 'L',
       long,
@@ -53,7 +66,60 @@ pub enum SubArgs {
       help = "language ID for API requests for formatted names"
     )]
     lang: LanguageId,
+
+    #[arg(
+      long,
+      value_name = "DIR",
+      help = "cache directory for API calls (default: ~/.cache/pokefilter/)"
+    )]
+    cache_dir: Option<std::path::PathBuf>,
   },
+}
+
+#[derive(clap::Args, Debug)]
+#[group(required = true, multiple = false)]
+pub struct BuildOpts {
+  #[arg(
+    short,
+    long,
+    help_heading = "Range",
+    help = "print information for all Pokemon"
+  )]
+  pub all: bool,
+
+  #[arg(
+    short,
+    long,
+    help_heading = "Range",
+    help = "print information for specified Pokemon"
+  )]
+  pub pokemon: Option<String>,
+
+  #[arg(
+    short = 'P',
+    long,
+    num_args = 2,
+    help_heading = "Range",
+    help = "print information for all between the specified Pokemon"
+  )]
+  pub pokerange: Option<Vec<String>>,
+
+  #[arg(
+    short = 'n',
+    long,
+    help_heading = "Range",
+    help = "print information for Pokemon with the specified national Pokedex number"
+  )]
+  pub dexnum: Option<i64>,
+
+  #[arg(
+    short = 'N',
+    long,
+    num_args = 2,
+    help_heading = "Range",
+    help = "print information for all between the specified national Pokedex numbers"
+  )]
+  pub dexrange: Option<Vec<i64>>,
 }
 
 pub fn get_appname() -> String {
