@@ -162,12 +162,12 @@ mod tests {
 
     // Create temporary file for comparison
     let outpath = Path::new("src/utils/enums_temp.rs");
-    let mut outfile = match File::create(&outpath) {
+    let mut outfile = match File::create(outpath) {
       Ok(f) => f,
       Err(err) => panic!("could not open file {}: {}", outpath.display(), err),
     };
     let mut write_line = |x: &str| {
-      if let Err(err) = outfile.write_all(format!("{}\n", x).as_bytes()) {
+      if let Err(err) = outfile.write_all(format!("{x}\n").as_bytes()) {
         panic!("could not write to {}: {}", outpath.display(), err);
       }
     };
@@ -201,7 +201,7 @@ mod tests {
       let mut alias = String::new();
       for c in name.chars() {
         if c.is_ascii_uppercase() {
-          alias = format!("  #[value(alias = \"{}\")]", name);
+          alias = format!("  #[value(alias = \"{name}\")]");
           break;
         }
       }
