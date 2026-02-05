@@ -14,7 +14,7 @@ pub async fn get_pokemon_name(
   lang: &str,
 ) -> Result<String, clap::Error> {
   let forms =
-    match future::try_join_all(pokemon.forms.iter().map(async |f| f.follow(&client).await)).await {
+    match future::try_join_all(pokemon.forms.iter().map(async |f| f.follow(client).await)).await {
       Ok(x) => x,
       Err(_) => {
         return Err(cli::error(
@@ -28,11 +28,11 @@ pub async fn get_pokemon_name(
     };
 
   for form in forms.into_iter() {
-    if !form.is_default || form.names.len() == 0 {
+    if !form.is_default || form.names.is_empty() {
       continue;
     }
     for n in form.names.iter() {
-      if let Ok(item) = n.language.follow(&client).await
+      if let Ok(item) = n.language.follow(client).await
         && item.name == lang
       {
         return Ok(n.name.clone());
@@ -45,10 +45,10 @@ pub async fn get_pokemon_name(
 }
 
 pub fn fwriteln(outfile: &mut File, display: &Display, content: &str) -> Result<(), clap::Error> {
-  if let Err(why) = outfile.write_all(format!("{}\n", content).as_bytes()) {
+  if let Err(why) = outfile.write_all(format!("{content}\n").as_bytes()) {
     return Err(cli::error(
       ErrorKind::InvalidValue,
-      format!("error writing to file {}: {}", display, why),
+      format!("error writing to file {display}: {why}"),
     ));
   }
   Ok(())
@@ -62,7 +62,7 @@ pub fn create_client(cache_dir: Option<std::path::PathBuf>) -> RustemonClient {
       if let Some(home) = std::env::home_dir() {
         let dirpath = format!("{}/.cache", home.display());
         let dirpath = Path::new(&dirpath);
-        if dirpath.exists() || matches!(create_dir(dirpath), Ok(_)) {
+        if dirpath.exists() || create_dir(dirpath).is_ok() {
           result = Some(format!("{}/{}", dirpath.display(), cli::get_appname()).into());
         }
       }

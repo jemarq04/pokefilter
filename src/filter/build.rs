@@ -33,7 +33,7 @@ pub async fn build(
       if let Some(home) = std::env::home_dir() {
         let dirpath = format!("{}/.{}", home.display(), cli::get_appname());
         let dirpath = Path::new(&dirpath);
-        if dirpath.exists() || matches!(create_dir(dirpath), Ok(_)) {
+        if dirpath.exists() || create_dir(dirpath).is_ok() {
           result = format!("{}/pokeinfo.csv", dirpath.display());
         }
       }
@@ -61,7 +61,7 @@ pub async fn build(
   }
 
   // Create output file
-  let mut outfile = match File::create(&filepath) {
+  let mut outfile = match File::create(filepath) {
     Ok(file) => file,
     Err(why) => {
       return Err(cli::error(
@@ -74,7 +74,7 @@ pub async fn build(
   // Determine the columns for the output CSV file
   let keys = match keys {
     None => DEFAULT_HEADER.split(",").collect::<Vec<&str>>(),
-    Some(k) => k.into_iter().map(|x| x.as_str()).collect::<Vec<&str>>(),
+    Some(k) => k.iter().map(|x| x.as_str()).collect::<Vec<&str>>(),
   };
   helpers::fwriteln(&mut outfile, &filepath.display(), &keys.join(","))?;
 
@@ -82,12 +82,12 @@ pub async fn build(
   let mut start = 1;
   let mut end = LAST_SPECIES_ID;
   if let Some(pokemon) = &range_opts.pokemon {
-    let species = match rustemon::pokemon::pokemon_species::get_by_name(&pokemon, &client).await {
+    let species = match rustemon::pokemon::pokemon_species::get_by_name(pokemon, &client).await {
       Ok(obj) => obj,
       Err(_) => {
         return Err(cli::error(
           ErrorKind::InvalidValue,
-          format!("API error: could not retrieve species {}", pokemon),
+          format!("API error: could not retrieve species {pokemon}"),
         ));
       },
     };
@@ -131,7 +131,7 @@ pub async fn build(
       Err(_) => {
         return Err(cli::error(
           ErrorKind::InvalidValue,
-          format!("API error: could not retrieve species with ID {}", id),
+          format!("API error: could not retrieve species with ID {id}"),
         ));
       },
     };
@@ -185,12 +185,12 @@ pub async fn build_pokemon(
       // Name/ID
       "pokemon_id" => mon.name.to_string(),
       "national_dex" => species.id.to_string(),
-      "pokemon" => helpers::get_pokemon_name(&client, &mon, &lang.to_string()).await?,
+      "pokemon" => helpers::get_pokemon_name(client, mon, &lang.to_string()).await?,
       "species" => get_name_strict!(species, client, lang.to_string())?,
       // Generation
       "generation" => {
-        if let None = generation {
-          generation = Some(match species.generation.follow(&client).await {
+        if generation.is_none() {
+          generation = Some(match species.generation.follow(client).await {
             Ok(obj) => obj,
             Err(_) => {
               return Err(cli::error(
@@ -220,7 +220,7 @@ pub async fn build_pokemon(
           let mut ability: String =
             get_name_strict!(follow r_ability.ability, client, lang.to_string())?;
           if r_ability.is_hidden {
-            ability.push_str("*");
+            ability.push('*');
           }
           abilities.push(ability);
         }
@@ -300,25 +300,22 @@ pub async fn build_pokemon(
       "weight" => mon.weight.to_string(),
       // Stage and Evolution Type
       "stage" => {
-        if let None = stage {
-          (stage, is_branched, is_branching) =
-            get_evo_stage_and_type(&client, &species, &mon).await?;
+        if stage.is_none() {
+          (stage, is_branched, is_branching) = get_evo_stage_and_type(client, species, mon).await?;
         }
         stage.unwrap().to_string()
       },
       "is_branched" => {
-        if let None = is_branched {
-          (stage, is_branched, is_branching) =
-            get_evo_stage_and_type(&client, &species, &mon).await?;
+        if is_branched.is_none() {
+          (stage, is_branched, is_branching) = get_evo_stage_and_type(client, species, mon).await?;
         }
-        (is_branched.unwrap() as i64).to_string()
+        is_branched.unwrap().to_string()
       },
       "is_branching" => {
-        if let None = is_branching {
-          (stage, is_branched, is_branching) =
-            get_evo_stage_and_type(&client, &species, &mon).await?;
+        if is_branching.is_none() {
+          (stage, is_branched, is_branching) = get_evo_stage_and_type(client, species, mon).await?;
         }
-        (is_branching.unwrap() as i64).to_string()
+        is_branching.unwrap().to_string()
       },
       // Starter
       "is_starter" => match species.id {
@@ -357,8 +354,8 @@ pub async fn build_pokemon(
       },
       // Category/Category ID
       "category" => {
-        if let None = generation {
-          generation = Some(match species.generation.follow(&client).await {
+        if generation.is_none() {
+          generation = Some(match species.generation.follow(client).await {
             Ok(obj) => obj,
             Err(_) => {
               return Err(cli::error(
@@ -371,12 +368,12 @@ pub async fn build_pokemon(
             },
           });
         }
-        if let None = category {
+        if category.is_none() {
           category = Some(
             get_category(
-              &client,
-              &species,
-              &mon,
+              client,
+              species,
+              mon,
               &generation.clone().unwrap(),
               &lang.to_string(),
             )
@@ -386,12 +383,12 @@ pub async fn build_pokemon(
         category.clone().unwrap()
       },
       "category_id" => {
-        if let None = category {
+        if category.is_none() {
           category = Some(
             get_category(
-              &client,
-              &species,
-              &mon,
+              client,
+              species,
+              mon,
               &generation.clone().unwrap(),
               &lang.to_string(),
             )
@@ -458,7 +455,7 @@ pub async fn build_pokemon(
         if category_id == 0 {
           return Err(cli::error(
             ErrorKind::InvalidValue,
-            format!("error: failed to retrieve appropriate pokedex ordering"),
+            "error: failed to retrieve appropriate pokedex ordering".to_string(),
           ));
         }
         category_id.to_string()
@@ -468,8 +465,7 @@ pub async fn build_pokemon(
         return Err(cli::error(
           ErrorKind::InvalidValue,
           format!(
-            "error: invalid key: {}\n\n{valid}tip:{valid:#} valid options are {}",
-            key, DEFAULT_HEADER
+            "error: invalid key: {key}\n\n{valid}tip:{valid:#} valid options are {DEFAULT_HEADER}"
           ),
         ));
       },
@@ -707,7 +703,7 @@ async fn get_evo_stage_and_type(
     // Determine evolution stage and if it branches
     _ => {
       if let Some(r_chain) = species.evolution_chain.clone() {
-        let chain = match r_chain.follow(&client).await {
+        let chain = match r_chain.follow(client).await {
           Ok(obj) => obj.chain,
           Err(_) => {
             return Err(cli::error(
@@ -719,13 +715,13 @@ async fn get_evo_stage_and_type(
             ));
           },
         };
-        if chain.evolves_to.len() > 0 {
+        if !chain.evolves_to.is_empty() {
           let mut found1 = false;
           for ch1 in chain.evolves_to.iter() {
             if stage != 0 {
               break;
             }
-            if ch1.evolves_to.len() > 0 {
+            if !ch1.evolves_to.is_empty() {
               let mut found2 = false;
               for ch2 in ch1.evolves_to.iter() {
                 if ch2.species.name == species.name {
@@ -735,22 +731,18 @@ async fn get_evo_stage_and_type(
                   break;
                 }
               }
-              if !found2 {
-                if ch1.species.name == species.name {
-                  stage = 2;
-                  branching = (ch1.evolves_to.len() > 1) as i64;
-                  branched = (chain.evolves_to.len() > 1) as i64;
-                  found1 = true;
-                  break;
-                }
+              if !found2 && ch1.species.name == species.name {
+                stage = 2;
+                branching = (ch1.evolves_to.len() > 1) as i64;
+                branched = (chain.evolves_to.len() > 1) as i64;
+                found1 = true;
+                break;
               }
             }
           }
-          if !found1 {
-            if chain.species.name == species.name {
-              stage = 1;
-              branching = (chain.evolves_to.len() > 1) as i64;
-            }
+          if !found1 && chain.species.name == species.name {
+            stage = 1;
+            branching = (chain.evolves_to.len() > 1) as i64;
           }
         }
       }
@@ -766,7 +758,7 @@ async fn get_category(
   generation: &rustemon::model::games::Generation,
   lang: &str,
 ) -> Result<String, clap::Error> {
-  let mut category = get_name_strict!(follow generation.main_region, client, lang.to_string())?;
+  let mut category = get_name_strict!(follow generation.main_region, client, lang)?;
   if (mon.name.starts_with("zygarde")
     && ["10", "power-construct", "complete"]
       .iter()
@@ -798,7 +790,7 @@ async fn get_category(
     category = String::from("Gmax");
   } else if ["mega", "mega-x", "mega-y", "mega-z", "primal"]
     .iter()
-    .any(|name| mon.name.ends_with(&format!("-{}", name)))
+    .any(|name| mon.name.ends_with(&format!("-{name}")))
   {
     category = String::from("Mega");
   }
