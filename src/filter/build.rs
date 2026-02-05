@@ -30,16 +30,17 @@ pub async fn build(
     Some(p) => p,
     None => {
       let mut result = String::new();
+      let filename = "pokeinfo.csv";
       if let Some(home) = std::env::home_dir() {
         let dirpath = format!("{}/.{}", home.display(), cli::get_appname());
         let dirpath = Path::new(&dirpath);
         if dirpath.exists() || create_dir(dirpath).is_ok() {
-          result = format!("{}/pokeinfo.csv", dirpath.display());
+          result = format!("{}/{}", dirpath.display(), filename);
         }
       }
       if result.is_empty() {
         eprintln!("warning: CSV file will be built in working directory");
-        result = String::from("pokeinfo.csv");
+        result = String::from(filename);
       }
       result
     }
