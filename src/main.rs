@@ -14,11 +14,10 @@ async fn main() {
       output: filepath,
       force,
       range_opts,
-      keys,
       lang,
       cache_dir,
     } => {
-      if let Err(e) = filter::build(filepath, force, range_opts, &keys, lang, cache_dir).await {
+      if let Err(e) = filter::build(filepath, force, range_opts, lang, cache_dir).await {
         e.exit();
       }
     },

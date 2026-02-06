@@ -9,7 +9,7 @@ use std::{fs::File, path::Path};
 const LAST_SPECIES_ID: i64 = 1025;
 // Remaining in previous format:
 // Regional Dexes,Past Types,Past Abilities,(Past Stats),
-const DEFAULT_HEADER: &str = "pokemon_id,national_dex,pokemon,species,generation,types,abilities,color,egg_groups,held_items,\
+const HEADER: &str = "pokemon_id,national_dex,pokemon,species,generation,types,abilities,color,egg_groups,held_items,\
   growth_rate,gender_rate,base_stats,EV_yields,hatch_counter,base_EXP,capture_rate,base_happiness,height,weight,\
   stage,is_branched,is_branching,is_starter,is_fossil,is_baby,is_mythical,is_legendary,is_UB,is_paradox,category,category_id";
 
@@ -17,7 +17,6 @@ pub async fn build(
   filepath: Option<std::path::PathBuf>,
   force: bool,
   range_opts: cli::BuildOpts,
-  keys: &Option<Vec<String>>,
   lang: LanguageId,
   cache_dir: Option<std::path::PathBuf>,
 ) -> Result<(), clap::Error> {
@@ -56,11 +55,7 @@ pub async fn build(
   };
 
   // Determine the columns for the output CSV file
-  let keys = match keys {
-    None => DEFAULT_HEADER.split(",").collect::<Vec<&str>>(),
-    Some(k) => k.iter().map(|x| x.as_str()).collect::<Vec<&str>>(),
-  };
-  helpers::fwriteln(&mut outfile, &filepath.display(), &keys.join(","))?;
+  helpers::fwriteln(&mut outfile, &filepath.display(), HEADER)?;
 
   // Determine appropriate range of pokemon to print
   let mut start = 1;
@@ -137,7 +132,7 @@ pub async fn build(
       helpers::fwriteln(
         &mut outfile,
         &filepath.display(),
-        &build_pokemon(&client, &species, &mon, lang, &keys).await?,
+        &build_pokemon(&client, &species, &mon, lang, &HEADER.split(",").collect()).await?,
       )?;
     }
   }
@@ -153,11 +148,6 @@ pub async fn build_pokemon(
   keys: &Vec<&str>,
 ) -> Result<String, clap::Error> {
   let mut output = Vec::new();
-  /*
-  const DEFAULT_HEADER: &str = "pokemon_id,national_dex,pokemon,species,generation,types,abilities,color,egg_groups,held_items,\
-    growth_rate,gender_rate,base_stats,EV_yields,hatch_counter,base_EXP,capture_rate,base_happiness,height,weight,\
-    stage,is_branched,is_branching,is_starter,is_fossil,is_baby,is_mythical,is_legendary,is_UB,is_paradox,category,category_id";
-  */
 
   let mut generation = None;
   let mut stage = None;
@@ -448,7 +438,7 @@ pub async fn build_pokemon(
         let valid = cli::VALID;
         return Err(cli::error(
           ErrorKind::InvalidValue,
-          format!("invalid key: {key}\n\n{valid}tip:{valid:#} valid options are {DEFAULT_HEADER}"),
+          format!("invalid key: {key}\n\n{valid}tip:{valid:#} valid options are {HEADER}"),
         ));
       },
     });
