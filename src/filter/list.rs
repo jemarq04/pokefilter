@@ -4,7 +4,7 @@ use std::{fs::File, path::Path};
 
 struct Record {
   identifier: String,
-  dex: i64,
+  national_dex: i64,
   pokemon: String,
   species: String,
   generation: i64,

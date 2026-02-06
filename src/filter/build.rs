@@ -9,7 +9,7 @@ use std::{fs::File, path::Path};
 const LAST_SPECIES_ID: i64 = 1025;
 // Remaining in previous format:
 // Regional Dexes,Past Types,Past Abilities,(Past Stats),
-const HEADER: &str = "pokemon_id,national_dex,pokemon,species,generation,types,abilities,color,egg_groups,held_items,\
+const HEADER: &str = "identifier,national_dex,pokemon,species,generation,types,abilities,color,egg_groups,held_items,\
   growth_rate,gender_rate,base_stats,EV_yields,hatch_counter,base_EXP,capture_rate,base_happiness,height,weight,\
   stage,is_branched,is_branching,is_starter,is_fossil,is_baby,is_mythical,is_legendary,is_UB,is_paradox,category,category_id";
 
@@ -157,7 +157,7 @@ pub async fn build_pokemon(
   for key in keys.iter() {
     output.push(match *key {
       // Name/ID
-      "pokemon_id" => mon.name.to_string(),
+      "identifier" => mon.name.to_string(),
       "national_dex" => species.id.to_string(),
       "pokemon" => helpers::get_pokemon_name(client, mon, &lang.to_string()).await?,
       "species" => get_name_strict!(species, client, lang.to_string())?,
