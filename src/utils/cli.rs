@@ -74,6 +74,17 @@ pub enum SubArgs {
     )]
     cache_dir: Option<std::path::PathBuf>,
   },
+  /// List Pokemon that match given filters.
+  #[command(name = "list", long_about)]
+  List {
+    #[arg(
+      short,
+      long,
+      value_name = "PATH",
+      help = "input file path for CSV file (default: ~/.pokefilter/pokeinfo.csv)"
+    )]
+    input: Option<std::path::PathBuf>,
+  },
 }
 
 #[derive(clap::Args, Debug)]

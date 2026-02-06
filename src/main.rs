@@ -22,5 +22,10 @@ async fn main() {
         e.exit();
       }
     },
+    SubArgs::List { input: filepath } => {
+      if let Err(e) = filter::list(filepath) {
+        e.exit();
+      }
+    },
   }
 }
