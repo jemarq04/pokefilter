@@ -54,7 +54,7 @@ pub async fn build(
     return Err(cli::error(
       ErrorKind::InvalidValue,
       format!(
-        "error: file {} already exists\n\n{valid}tip:{valid:#} to overwrite it, run '{} build --force'",
+        "file {} already exists\n\n{valid}tip:{valid:#} to overwrite it, run '{} build --force'",
         filepath.display(),
         cli::get_appname()
       ),
@@ -456,7 +456,7 @@ pub async fn build_pokemon(
         if category_id == 0 {
           return Err(cli::error(
             ErrorKind::InvalidValue,
-            "error: failed to retrieve appropriate pokedex ordering".to_string(),
+            "failed to retrieve appropriate pokedex ordering".to_string(),
           ));
         }
         category_id.to_string()
@@ -465,9 +465,7 @@ pub async fn build_pokemon(
         let valid = cli::VALID;
         return Err(cli::error(
           ErrorKind::InvalidValue,
-          format!(
-            "error: invalid key: {key}\n\n{valid}tip:{valid:#} valid options are {DEFAULT_HEADER}"
-          ),
+          format!("invalid key: {key}\n\n{valid}tip:{valid:#} valid options are {DEFAULT_HEADER}"),
         ));
       },
     });
