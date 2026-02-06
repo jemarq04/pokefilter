@@ -4,8 +4,7 @@ use clap::error::ErrorKind;
 use rustemon::model::pokemon::{Pokemon, PokemonSpecies};
 use rustemon::{Follow, client::RustemonClient};
 use std::collections::HashMap;
-use std::fs::{File, create_dir};
-use std::path::Path;
+use std::{fs::File, path::Path};
 
 const LAST_SPECIES_ID: i64 = 1025;
 // Remaining in previous format:
@@ -28,23 +27,7 @@ pub async fn build(
   // If absent, set filepath to default
   let filepath = match filepath {
     Some(p) => p,
-    None => {
-      let mut result = String::new();
-      let filename = "pokeinfo.csv";
-      if let Some(home) = std::env::home_dir() {
-        let dirpath = format!("{}/.{}", home.display(), cli::get_appname());
-        let dirpath = Path::new(&dirpath);
-        if dirpath.exists() || create_dir(dirpath).is_ok() {
-          result = format!("{}/{}", dirpath.display(), filename);
-        }
-      }
-      if result.is_empty() {
-        eprintln!("warning: CSV file will be built in working directory");
-        result = String::from(filename);
-      }
-      result
-    }
-    .into(),
+    None => helpers::get_default_cache_file().into(),
   };
 
   // Check if file already exists

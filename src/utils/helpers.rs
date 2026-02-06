@@ -80,3 +80,20 @@ pub fn create_client(cache_dir: Option<std::path::PathBuf>) -> RustemonClient {
     RustemonClient::default()
   }
 }
+
+pub fn get_default_cache_file() -> String {
+  let mut result = String::new();
+  let filename = "pokeinfo.csv";
+  if let Some(home) = std::env::home_dir() {
+    let dirpath = format!("{}/.{}", home.display(), cli::get_appname());
+    let dirpath = Path::new(&dirpath);
+    if dirpath.exists() || create_dir(dirpath).is_ok() {
+      result = format!("{}/{}", dirpath.display(), filename);
+    }
+  }
+  if result.is_empty() {
+    eprintln!("warning: CSV file will be built in working directory");
+    result = String::from(filename);
+  }
+  result
+}
