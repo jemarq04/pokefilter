@@ -10,7 +10,7 @@ async fn main() {
 
   // Call the appropriate subcommand for results
   match args.command {
-    SubArgs::BuildCmd {
+    SubArgs::Build {
       output: filepath,
       force,
       range_opts,

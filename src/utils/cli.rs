@@ -33,7 +33,7 @@ pub struct Args {
 pub enum SubArgs {
   /// Build cached CSV file for quick searches.
   #[command(name = "build", long_about)]
-  BuildCmd {
+  Build {
     #[arg(short, long, help = "overwrite file, if one exists")]
     force: bool,
 
