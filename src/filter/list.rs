@@ -1,21 +1,29 @@
 use crate::utils::{cli, helpers};
 use clap::error::ErrorKind;
+use serde::{self, Deserialize, de};
 use std::{fs::File, path::Path};
 
+#[derive(Clone, Debug, Deserialize)]
 struct Record {
   identifier: String,
   national_dex: i64,
   pokemon: String,
   species: String,
   generation: i64,
+  #[serde(deserialize_with = "deserialize_list")]
   types: Vec<String>,
+  #[serde(deserialize_with = "deserialize_list")]
   abilities: Vec<String>,
   color: String,
+  #[serde(deserialize_with = "deserialize_list")]
   egg_groups: Vec<String>,
+  #[serde(deserialize_with = "deserialize_list")]
   held_items: Vec<String>,
   growth_rate: String,
   gender_rate: f32,
+  #[serde(deserialize_with = "deserialize_list")]
   base_stats: Vec<i64>,
+  #[serde(deserialize_with = "deserialize_list")]
   ev_yields: Vec<i64>,
   hatch_counter: Option<i64>,
   base_exp: Option<i64>,
@@ -37,6 +45,20 @@ struct Record {
   category_id: i64,
 }
 
+fn deserialize_list<'de, D, V>(deserializer: D) -> Result<Vec<V>, D::Error>
+where
+  D: de::Deserializer<'de>,
+  V: std::str::FromStr,
+  <V as std::str::FromStr>::Err: std::fmt::Debug,
+{
+  let s = String::deserialize(deserializer)?;
+  let mut result = Vec::new();
+  for item in s.split(";") {
+    result.push(item.parse::<V>().unwrap());
+  }
+  Ok(result)
+}
+
 pub fn list(filepath: Option<std::path::PathBuf>) -> Result<(), clap::Error> {
   // If absent, set filepath to default
   let filepath = match filepath {
@@ -51,6 +73,28 @@ pub fn list(filepath: Option<std::path::PathBuf>) -> Result<(), clap::Error> {
       ErrorKind::InvalidValue,
       format!("invalid file: {}", filepath.display()),
     ));
+  }
+  let infile = match File::open(filepath) {
+    Ok(file) => file,
+    Err(why) => {
+      return Err(cli::error(
+        ErrorKind::InvalidValue,
+        format!("error opening file {}: {}", filepath.display(), why),
+      ));
+    },
+  };
+
+  let mut reader = csv::Reader::from_reader(infile);
+  //for result in reader.deserialize() {
+  if let Some(result) = reader.deserialize().next() {
+    let record: Record = match result {
+      Ok(res) => res,
+      Err(err) => {
+        return Err(cli::error(ErrorKind::InvalidValue, format!("{err}")));
+      },
+    };
+
+    println!("record: {:?}", record);
   }
 
   Ok(())
