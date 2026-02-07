@@ -10,8 +10,8 @@ const LAST_SPECIES_ID: i64 = 1025;
 // Remaining in previous format:
 // Regional Dexes,Past Types,Past Abilities,(Past Stats),
 const HEADER: &str = "identifier,national_dex,pokemon,species,generation,types,abilities,color,egg_groups,held_items,\
-  growth_rate,gender_rate,base_stats,EV_yields,hatch_counter,base_EXP,capture_rate,base_happiness,height,weight,\
-  stage,is_branched,is_branching,is_starter,is_fossil,is_baby,is_mythical,is_legendary,is_UB,is_paradox,category,category_id";
+  growth_rate,gender_rate,base_stats,ev_yields,hatch_counter,base_exp,capture_rate,base_happiness,height,weight,\
+  stage,is_branched,is_branching,is_starter,is_fossil,is_baby,is_mythical,is_legendary,is_ub,is_paradox,category,category_id";
 
 pub async fn build(
   filepath: Option<std::path::PathBuf>,
@@ -238,7 +238,7 @@ pub async fn build_pokemon(
           .join(";")
       },
       // EV Yields
-      "EV_yields" => {
+      "ev_yields" => {
         let mut ev_yields: Vec<i64> = mon
           .stats
           .clone()
@@ -258,7 +258,7 @@ pub async fn build_pokemon(
         None => String::from("None"),
       },
       //Base EXP
-      "base_EXP" => match mon.base_experience {
+      "base_exp" => match mon.base_experience {
         Some(base_experience) => base_experience.to_string(),
         None => String::from("None"),
       },
@@ -317,7 +317,7 @@ pub async fn build_pokemon(
       // Legendary
       "is_legendary" => (species.is_legendary as i64).to_string(),
       // Ultra Beast
-      "is_UB" => match species.id {
+      "is_ub" => match species.id {
         793..800 | 803..807 => String::from("1"),
         _ => String::from("0"),
       },
