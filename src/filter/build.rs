@@ -301,30 +301,30 @@ pub async fn build_pokemon(
         | 650..660
         | 722..732
         | 810..820
-        | 906..916 => String::from("1"),
-        _ if mon.name == "pikachu-starter" || mon.name == "eevee-starter" => String::from("1"),
-        _ => String::from("0"),
+        | 906..916 => String::from("true"),
+        _ if mon.name == "pikachu-starter" || mon.name == "eevee-starter" => String::from("true"),
+        _ => String::from("false"),
       },
       // Fossil
       "is_fossil" => match species.id {
-        138..143 | 345..349 | 408..412 | 564..568 | 696..700 | 880..884 => String::from("1"),
-        _ => String::from("0"),
+        138..143 | 345..349 | 408..412 | 564..568 | 696..700 | 880..884 => String::from("true"),
+        _ => String::from("false"),
       },
       // Baby
-      "is_baby" => (species.is_baby as i64).to_string(),
+      "is_baby" => species.is_baby.to_string(),
       // Mythical
-      "is_mythical" => (species.is_mythical as i64).to_string(),
+      "is_mythical" => species.is_mythical.to_string(),
       // Legendary
-      "is_legendary" => (species.is_legendary as i64).to_string(),
+      "is_legendary" => species.is_legendary.to_string(),
       // Ultra Beast
       "is_ub" => match species.id {
-        793..800 | 803..807 => String::from("1"),
-        _ => String::from("0"),
+        793..800 | 803..807 => String::from("true"),
+        _ => String::from("false"),
       },
       // Paradox
       "is_paradox" => match species.id {
-        984..996 | 1005..1011 | 1020..1024 => String::from("1"),
-        _ => String::from("0"),
+        984..996 | 1005..1011 | 1020..1024 => String::from("true"),
+        _ => String::from("false"),
       },
       // Category/Category ID
       "category" => {
@@ -451,226 +451,226 @@ async fn get_evo_stage_and_type(
   client: &RustemonClient,
   species: &PokemonSpecies,
   mon: &Pokemon,
-) -> Result<(Option<i64>, Option<i64>, Option<i64>), clap::Error> {
+) -> Result<(Option<i64>, Option<bool>, Option<bool>), clap::Error> {
   // Stage
   //  0: Single-stage pokemon
   //  1: First pokemon in a multi-stage line
   //  2: Middle pokemon in a three-stage line
   //  3: Last pokemon in a multi-stage line
   let mut stage = 0;
-  let mut branched = 0;
-  let mut branching = 0;
+  let mut branched = false;
+  let mut branching = false;
   match mon.name.as_str() {
     // Handle manual exceptions (limitation of API)
     "pikachu-starter" => {
       stage = 0;
-      branching = 0;
-      branched = 0;
+      branching = false;
+      branched = false;
     },
     "pikachu-gmax" => {
       stage = 0;
-      branching = 0;
-      branched = 0;
+      branching = false;
+      branched = false;
     },
     "eevee-starter" => {
       stage = 0;
-      branching = 0;
-      branched = 0;
+      branching = false;
+      branched = false;
     },
     "eevee-gmax" => {
       stage = 0;
-      branching = 0;
-      branched = 0;
+      branching = false;
+      branched = false;
     },
     "meowth" => {
       stage = 1;
-      branching = 0;
-      branched = 0;
+      branching = false;
+      branched = false;
     },
     "meowth-alola" => {
       stage = 1;
-      branching = 0;
-      branched = 0;
+      branching = false;
+      branched = false;
     },
     "meowth-galar" => {
       stage = 1;
-      branching = 0;
-      branched = 0;
+      branching = false;
+      branched = false;
     },
     "meowth-gmax" => {
       stage = 1;
-      branching = 0;
-      branched = 0;
+      branching = false;
+      branched = false;
     },
     "persian" => {
       stage = 3;
-      branching = 0;
-      branched = 0;
+      branching = false;
+      branched = false;
     },
     "persian-alola" => {
       stage = 3;
-      branching = 0;
-      branched = 0;
+      branching = false;
+      branched = false;
     },
     "perrserker" => {
       stage = 3;
-      branching = 0;
-      branched = 0;
+      branching = false;
+      branched = false;
     },
     "farfetchd-galar" => {
       stage = 1;
-      branching = 0;
-      branched = 0;
+      branching = false;
+      branched = false;
     },
     "sirfetchd" => {
       stage = 3;
-      branching = 0;
-      branched = 0;
+      branching = false;
+      branched = false;
     },
     "mr-mime" => {
       stage = 3;
-      branching = 0;
-      branched = 0;
+      branching = false;
+      branched = false;
     },
     "mr-mime-galar" => {
       stage = 1;
-      branching = 0;
-      branched = 0;
+      branching = false;
+      branched = false;
     },
     "mr-rime" => {
       stage = 3;
-      branching = 0;
-      branched = 0;
+      branching = false;
+      branched = false;
     },
     "wooper" => {
       stage = 1;
-      branching = 0;
-      branched = 0;
+      branching = false;
+      branched = false;
     },
     "wooper-paldea" => {
       stage = 1;
-      branching = 0;
-      branched = 0;
+      branching = false;
+      branched = false;
     },
     "quagsire" => {
       stage = 3;
-      branching = 0;
-      branched = 0;
+      branching = false;
+      branched = false;
     },
     "clodsire" => {
       stage = 3;
-      branching = 0;
-      branched = 0;
+      branching = false;
+      branched = false;
     },
     "qwilfish" => {
       stage = 0;
-      branching = 0;
-      branched = 0;
+      branching = false;
+      branched = false;
     },
     "qwilfish-hisui" => {
       stage = 1;
-      branching = 0;
-      branched = 0;
+      branching = false;
+      branched = false;
     },
     "overqwil" => {
       stage = 3;
-      branching = 0;
-      branched = 0;
+      branching = false;
+      branched = false;
     },
     "sneasel" => {
       stage = 1;
-      branching = 0;
-      branched = 0;
+      branching = false;
+      branched = false;
     },
     "sneasel-hisui" => {
       stage = 1;
-      branching = 0;
-      branched = 0;
+      branching = false;
+      branched = false;
     },
     "weavile" => {
       stage = 3;
-      branching = 0;
-      branched = 0;
+      branching = false;
+      branched = false;
     },
     "sneasler" => {
       stage = 3;
-      branching = 0;
-      branched = 0;
+      branching = false;
+      branched = false;
     },
     "corsola" => {
       stage = 0;
-      branching = 0;
-      branched = 0;
+      branching = false;
+      branched = false;
     },
     "corsola-galar" => {
       stage = 1;
-      branching = 0;
-      branched = 0;
+      branching = false;
+      branched = false;
     },
     "cursola" => {
       stage = 3;
-      branching = 0;
-      branched = 0;
+      branching = false;
+      branched = false;
     },
     "zigzagoon" => {
       stage = 1;
-      branching = 0;
-      branched = 0;
+      branching = false;
+      branched = false;
     },
     "zigzagoon-galar" => {
       stage = 1;
-      branching = 0;
-      branched = 0;
+      branching = false;
+      branched = false;
     },
     "linoone" => {
       stage = 3;
-      branching = 0;
-      branched = 0;
+      branching = false;
+      branched = false;
     },
     "linoone-galar" => {
       stage = 2;
-      branching = 0;
-      branched = 0;
+      branching = false;
+      branched = false;
     },
     "obstagoon" => {
       stage = 3;
-      branching = 0;
-      branched = 0;
+      branching = false;
+      branched = false;
     },
     "yamask" => {
       stage = 1;
-      branching = 0;
-      branched = 0;
+      branching = false;
+      branched = false;
     },
     "yamask-galar" => {
       stage = 1;
-      branching = 0;
-      branched = 0;
+      branching = false;
+      branched = false;
     },
     "cofagrigus" => {
       stage = 3;
-      branching = 0;
-      branched = 0;
+      branching = false;
+      branched = false;
     },
     "runerigus" => {
       stage = 3;
-      branching = 0;
-      branched = 0;
+      branching = false;
+      branched = false;
     },
     "basculin-red-striped" => {
       stage = 0;
-      branching = 0;
-      branched = 0;
+      branching = false;
+      branched = false;
     },
     "basculin-blue-striped" => {
       stage = 0;
-      branching = 0;
-      branched = 0;
+      branching = false;
+      branched = false;
     },
     "basculin-white-striped" => {
       stage = 1;
-      branching = 0;
-      branched = 0;
+      branching = false;
+      branched = false;
     },
     // Determine evolution stage and if it branches
     _ => {
@@ -698,15 +698,15 @@ async fn get_evo_stage_and_type(
               for ch2 in ch1.evolves_to.iter() {
                 if ch2.species.name == species.name {
                   stage = 3;
-                  branched = (ch1.evolves_to.len() > 1) as i64;
+                  branched = ch1.evolves_to.len() > 1;
                   found2 = true;
                   break;
                 }
               }
               if !found2 && ch1.species.name == species.name {
                 stage = 2;
-                branching = (ch1.evolves_to.len() > 1) as i64;
-                branched = (chain.evolves_to.len() > 1) as i64;
+                branching = ch1.evolves_to.len() > 1;
+                branched = chain.evolves_to.len() > 1;
                 found1 = true;
                 break;
               }
@@ -714,7 +714,7 @@ async fn get_evo_stage_and_type(
           }
           if !found1 && chain.species.name == species.name {
             stage = 1;
-            branching = (chain.evolves_to.len() > 1) as i64;
+            branching = chain.evolves_to.len() > 1;
           }
         }
       }
