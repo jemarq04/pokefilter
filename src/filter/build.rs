@@ -255,19 +255,19 @@ pub async fn build_pokemon(
       // Hatch Counter
       "hatch_counter" => match species.hatch_counter {
         Some(hatch_counter) => hatch_counter.to_string(),
-        None => String::from("None"),
+        None => String::new(),
       },
       //Base EXP
       "base_exp" => match mon.base_experience {
         Some(base_experience) => base_experience.to_string(),
-        None => String::from("None"),
+        None => String::new(),
       },
       // Capture Rate
       "capture_rate" => species.capture_rate.to_string(),
       // Base Happiness
       "base_happiness" => match species.base_hapiness {
         Some(base_happiness) => base_happiness.to_string(),
-        None => String::from("None"),
+        None => String::new(),
       },
       // Height/Weight
       "height" => mon.height.to_string(),
