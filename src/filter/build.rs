@@ -11,7 +11,7 @@ const LAST_SPECIES_ID: i64 = 1025;
 // Regional Dexes,Past Types,Past Abilities,(Past Stats),
 const HEADER: &str = "identifier,national_dex,pokemon,species,generation,types,abilities,color,egg_groups,held_items,\
   growth_rate,gender_rate,base_stats,ev_yields,hatch_counter,base_exp,capture_rate,base_happiness,height,weight,\
-  stage,is_branched,is_branching,is_starter,is_fossil,is_baby,is_mythical,is_legendary,is_ub,is_paradox,category,category_id";
+  stage,is_branched,is_branching,is_starter,is_fossil,is_baby,is_mythical,is_legendary,is_ub,is_paradox,category,category_order";
 
 pub async fn build(
   filepath: Option<std::path::PathBuf>,
@@ -312,7 +312,7 @@ pub async fn build_pokemon(
       "is_ub" => matches!(species.id, 793..800 | 803..807).to_string(),
       // Paradox
       "is_paradox" => matches!(species.id, 984..996 | 1005..1011 | 1020..1024).to_string(),
-      // Category/Category ID
+      // Category/Category Ordering
       "category" => {
         if generation.is_none() {
           generation = Some(match species.generation.follow(client).await {
@@ -342,7 +342,7 @@ pub async fn build_pokemon(
         }
         category.clone().unwrap()
       },
-      "category_id" => {
+      "category_order" => {
         if category.is_none() {
           category = Some(
             get_category(
@@ -357,7 +357,7 @@ pub async fn build_pokemon(
         }
         // Handle forms for single-dex regions
         let category_map = HashMap::from([("Alola", "updated-alola"), ("Hisui", "hisui")]);
-        let category_id = match category.clone().unwrap().as_str() {
+        let category_order = match category.clone().unwrap().as_str() {
           // Sorted by all regional dexes for forms
           "Galar" => {
             let mut result = 0;
@@ -412,13 +412,13 @@ pub async fn build_pokemon(
           // Otherwise, use national dex number
           _ => species.id,
         };
-        if category_id == 0 {
+        if category_order == 0 {
           return Err(cli::error(
             ErrorKind::InvalidValue,
             "failed to retrieve appropriate pokedex ordering".to_string(),
           ));
         }
-        category_id.to_string()
+        category_order.to_string()
       },
       _ => {
         let valid = cli::VALID;

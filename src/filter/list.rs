@@ -42,7 +42,7 @@ struct Record {
   is_ub: bool,
   is_paradox: bool,
   category: String,
-  category_id: i64,
+  category_order: i64,
 }
 
 fn deserialize_list<'de, D, V>(deserializer: D) -> Result<Vec<V>, D::Error>
