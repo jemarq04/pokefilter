@@ -292,23 +292,15 @@ pub async fn build_pokemon(
         is_branching.unwrap().to_string()
       },
       // Starter
-      "is_starter" => match species.id {
-        1..10
-        | 152..162
-        | 252..262
-        | 387..397
-        | 495..505
-        | 650..660
-        | 722..732
-        | 810..820
-        | 906..916 => String::from("true"),
-        _ if mon.name == "pikachu-starter" || mon.name == "eevee-starter" => String::from("true"),
-        _ => String::from("false"),
-      },
+      "is_starter" => (matches!(species.id, 1..10 | 152..162 | 252..262 | 387..397 | 495..505)
+        || matches!(species.id, 650..660 | 722..732 | 810..820 | 906..916)
+        || mon.name == "pikachu-starter"
+        || mon.name == "eevee-starter")
+        .to_string(),
       // Fossil
-      "is_fossil" => match species.id {
-        138..143 | 345..349 | 408..412 | 564..568 | 696..700 | 880..884 => String::from("true"),
-        _ => String::from("false"),
+      "is_fossil" => {
+        matches!(species.id, 138..143 | 345..349 | 408..412 | 564..568 | 696..700 | 880..884)
+          .to_string()
       },
       // Baby
       "is_baby" => species.is_baby.to_string(),
@@ -317,15 +309,9 @@ pub async fn build_pokemon(
       // Legendary
       "is_legendary" => species.is_legendary.to_string(),
       // Ultra Beast
-      "is_ub" => match species.id {
-        793..800 | 803..807 => String::from("true"),
-        _ => String::from("false"),
-      },
+      "is_ub" => matches!(species.id, 793..800 | 803..807).to_string(),
       // Paradox
-      "is_paradox" => match species.id {
-        984..996 | 1005..1011 | 1020..1024 => String::from("true"),
-        _ => String::from("false"),
-      },
+      "is_paradox" => matches!(species.id, 984..996 | 1005..1011 | 1020..1024).to_string(),
       // Category/Category ID
       "category" => {
         if generation.is_none() {
