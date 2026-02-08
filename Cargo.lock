@@ -1316,9 +1316,9 @@ dependencies = [
 
 [[package]]
 name = "rustemon"
-version = "4.4.0"
+version = "4.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ed75e7f56ac6800f4aa38b2495b2b05901cd680f6791eb3b1e76b91c5ef7bcde"
+checksum = "6311a9af7c35f1c09bb0db8c1a4c5f5e73da1c373a36721ca2c8ad7c21ce08f3"
 dependencies = [
  "http-cache-reqwest",
  "reqwest",

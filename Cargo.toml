@@ -14,7 +14,7 @@ keywords = ["pokemon", "pokeapi"]
 clap = { version = "4.5.53", features = ["derive"] }
 csv = "1.4.0"
 futures = "0.3.31"
-rustemon = "4.4.0"
+rustemon = "4.5.0"
 serde = { version = "1.0.228", features = ["derive"] }
 tokio = { version = "1.49.0", features = ["full"] }
 

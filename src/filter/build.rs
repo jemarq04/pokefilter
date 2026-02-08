@@ -192,7 +192,7 @@ pub async fn build_pokemon(
         let mut abilities = Vec::new();
         for r_ability in mon.abilities.iter() {
           let mut ability: String =
-            get_name_strict!(follow r_ability.ability, client, lang.to_string())?;
+            get_name_strict!(follow r_ability.ability.clone().unwrap(), client, lang.to_string())?;
           if r_ability.is_hidden {
             ability.push('*');
           }
@@ -265,7 +265,7 @@ pub async fn build_pokemon(
       // Capture Rate
       "capture_rate" => species.capture_rate.to_string(),
       // Base Happiness
-      "base_happiness" => match species.base_hapiness {
+      "base_happiness" => match species.base_happiness {
         Some(base_happiness) => base_happiness.to_string(),
         None => String::new(),
       },
