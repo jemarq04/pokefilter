@@ -13,19 +13,17 @@ pub async fn get_pokemon_name(
   pokemon: &rustemon::model::pokemon::Pokemon,
   lang: &str,
 ) -> Result<String, clap::Error> {
-  let forms =
-    match future::try_join_all(pokemon.forms.iter().map(async |f| f.follow(client).await)).await {
-      Ok(x) => x,
-      Err(_) => {
-        return Err(cli::error(
-          ErrorKind::InvalidValue,
-          format!(
-            "API error: could not retrieve pokemon forms for {}",
-            pokemon.name
-          ),
-        ));
-      },
-    };
+  let Ok(forms) =
+    future::try_join_all(pokemon.forms.iter().map(async |f| f.follow(client).await)).await
+  else {
+    return Err(cli::error(
+      ErrorKind::InvalidValue,
+      format!(
+        "API error: could not retrieve pokemon forms for {}",
+        pokemon.name
+      ),
+    ));
+  };
 
   for form in forms.into_iter() {
     if !form.is_default || form.names.is_empty() {

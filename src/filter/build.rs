@@ -44,15 +44,12 @@ pub async fn build(
   }
 
   // Create output file
-  let mut outfile = match File::create(filepath) {
-    Ok(file) => file,
-    Err(why) => {
-      return Err(cli::error(
-        ErrorKind::InvalidValue,
-        format!("error creating file {}: {}", filepath.display(), why),
-      ));
-    },
-  };
+  let mut outfile = File::create(filepath).map_err(|why| {
+    cli::error(
+      ErrorKind::InvalidValue,
+      format!("error creating file {}: {}", filepath.display(), why),
+    )
+  })?;
 
   // Determine the columns for the output CSV file
   helpers::fwriteln(&mut outfile, &filepath.display(), HEADER)?;
@@ -61,38 +58,32 @@ pub async fn build(
   let mut start = 1;
   let mut end = LAST_SPECIES_ID;
   if let Some(pokemon) = &range_opts.pokemon {
-    let species = match rustemon::pokemon::pokemon_species::get_by_name(pokemon, &client).await {
-      Ok(obj) => obj,
-      Err(_) => {
-        return Err(cli::error(
-          ErrorKind::InvalidValue,
-          format!("API error: could not retrieve species {pokemon}"),
-        ));
-      },
+    let Ok(species) = rustemon::pokemon::pokemon_species::get_by_name(pokemon, &client).await
+    else {
+      return Err(cli::error(
+        ErrorKind::InvalidValue,
+        format!("API error: could not retrieve species {pokemon}"),
+      ));
     };
     start = species.id;
     end = species.id;
   } else if let Some(pokerange) = &range_opts.pokerange {
-    let species_start =
-      match rustemon::pokemon::pokemon_species::get_by_name(&pokerange[0], &client).await {
-        Ok(obj) => obj,
-        Err(_) => {
-          return Err(cli::error(
-            ErrorKind::InvalidValue,
-            format!("API error: could not retrieve species {}", pokerange[0]),
-          ));
-        },
-      };
-    let species_end =
-      match rustemon::pokemon::pokemon_species::get_by_name(&pokerange[1], &client).await {
-        Ok(obj) => obj,
-        Err(_) => {
-          return Err(cli::error(
-            ErrorKind::InvalidValue,
-            format!("API error: could not retrieve species {}", pokerange[1]),
-          ));
-        },
-      };
+    let Ok(species_start) =
+      rustemon::pokemon::pokemon_species::get_by_name(&pokerange[0], &client).await
+    else {
+      return Err(cli::error(
+        ErrorKind::InvalidValue,
+        format!("API error: could not retrieve species {}", pokerange[0]),
+      ));
+    };
+    let Ok(species_end) =
+      rustemon::pokemon::pokemon_species::get_by_name(&pokerange[1], &client).await
+    else {
+      return Err(cli::error(
+        ErrorKind::InvalidValue,
+        format!("API error: could not retrieve species {}", pokerange[1]),
+      ));
+    };
     start = species_start.id;
     end = species_end.id;
   } else if let Some(dexnum) = range_opts.dexnum {
@@ -105,28 +96,22 @@ pub async fn build(
 
   // Loop through each ID and print the information for each variety of pokemon species
   for id in start..=end {
-    let species = match rustemon::pokemon::pokemon_species::get_by_id(id, &client).await {
-      Ok(obj) => obj,
-      Err(_) => {
-        return Err(cli::error(
-          ErrorKind::InvalidValue,
-          format!("API error: could not retrieve species with ID {id}"),
-        ));
-      },
+    let Ok(species) = rustemon::pokemon::pokemon_species::get_by_id(id, &client).await else {
+      return Err(cli::error(
+        ErrorKind::InvalidValue,
+        format!("API error: could not retrieve species with ID {id}"),
+      ));
     };
 
     for variety in species.varieties.iter() {
-      let mon = match variety.pokemon.follow(&client).await {
-        Ok(obj) => obj,
-        Err(_) => {
-          return Err(cli::error(
-            ErrorKind::InvalidValue,
-            format!(
-              "API error: could not retrieve species variety: {}",
-              variety.pokemon.name
-            ),
-          ));
-        },
+      let Ok(mon) = variety.pokemon.follow(&client).await else {
+        return Err(cli::error(
+          ErrorKind::InvalidValue,
+          format!(
+            "API error: could not retrieve species variety: {}",
+            variety.pokemon.name
+          ),
+        ));
       };
       println!("Building {}...", mon.name);
       helpers::fwriteln(
@@ -164,18 +149,15 @@ pub async fn build_pokemon(
       // Generation
       "generation" => {
         if generation.is_none() {
-          generation = Some(match species.generation.follow(client).await {
-            Ok(obj) => obj,
-            Err(_) => {
-              return Err(cli::error(
-                ErrorKind::InvalidValue,
-                format!(
-                  "API error: could not retrieve generation {}",
-                  species.generation.name
-                ),
-              ));
-            },
-          });
+          generation = Some(species.generation.follow(client).await.map_err(|_| {
+            cli::error(
+              ErrorKind::InvalidValue,
+              format!(
+                "API error: could not retrieve generation {}",
+                species.generation.name
+              ),
+            )
+          })?);
         }
         generation.clone().unwrap().id.to_string()
       },

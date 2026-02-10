@@ -74,25 +74,18 @@ pub fn list(filepath: Option<std::path::PathBuf>) -> Result<(), clap::Error> {
       format!("invalid file: {}", filepath.display()),
     ));
   }
-  let infile = match File::open(filepath) {
-    Ok(file) => file,
-    Err(why) => {
-      return Err(cli::error(
-        ErrorKind::InvalidValue,
-        format!("error opening file {}: {}", filepath.display(), why),
-      ));
-    },
-  };
+  let infile = File::open(filepath).map_err(|why| {
+    cli::error(
+      ErrorKind::InvalidValue,
+      format!("error opening file {}: {}", filepath.display(), why),
+    )
+  })?;
 
   let mut reader = csv::Reader::from_reader(infile);
   //for result in reader.deserialize() {
   if let Some(result) = reader.deserialize().next() {
-    let record: Record = match result {
-      Ok(res) => res,
-      Err(err) => {
-        return Err(cli::error(ErrorKind::InvalidValue, format!("{err}")));
-      },
-    };
+    let record: Record =
+      result.map_err(|err| cli::error(ErrorKind::InvalidValue, format!("{err}")))?;
 
     println!("record: {:?}", record);
   }
