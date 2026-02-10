@@ -117,7 +117,7 @@ pub async fn build(
       helpers::fwriteln(
         &mut outfile,
         &filepath.display(),
-        &build_pokemon(&client, &species, &mon, lang, &HEADER.split(",").collect()).await?,
+        &build_pokemon(&client, &species, &mon, lang, &HEADER.split(',').collect()).await?,
       )?;
     }
   }
@@ -142,7 +142,7 @@ pub async fn build_pokemon(
   for key in keys.iter() {
     output.push(match *key {
       // Name/ID
-      "identifier" => mon.name.to_string(),
+      "identifier" => mon.name.clone(),
       "national_dex" => species.id.to_string(),
       "pokemon" => helpers::get_pokemon_name(client, mon, &lang.to_string()).await?,
       "species" => get_name_strict!(species, client, lang.to_string())?,

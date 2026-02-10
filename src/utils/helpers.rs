@@ -25,7 +25,7 @@ pub async fn get_pokemon_name(
     ));
   };
 
-  for form in forms.into_iter() {
+  for form in forms {
     if !form.is_default || form.names.is_empty() {
       continue;
     }

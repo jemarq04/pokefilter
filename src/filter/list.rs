@@ -53,7 +53,7 @@ where
 {
   let s = String::deserialize(deserializer)?;
   let mut result = Vec::new();
-  for item in s.split(";") {
+  for item in s.split(';') {
     result.push(item.parse::<V>().unwrap());
   }
   Ok(result)
@@ -87,7 +87,7 @@ pub fn list(filepath: Option<std::path::PathBuf>) -> Result<(), clap::Error> {
     let record: Record =
       result.map_err(|err| cli::error(ErrorKind::InvalidValue, format!("{err}")))?;
 
-    println!("record: {:?}", record);
+    println!("record: {record:?}");
   }
 
   Ok(())
