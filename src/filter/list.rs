@@ -3,7 +3,6 @@ use clap::error::ErrorKind;
 use serde::{self, Deserialize, de};
 use std::{fs::File, path::Path};
 
-#[allow(clippy::struct_excessive_bools)]
 #[derive(Clone, Debug, Deserialize)]
 struct Record {
   identifier: String,
