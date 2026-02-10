@@ -11,12 +11,12 @@ repository = "https://github.com/jemarq04/pokefilter"
 keywords = ["pokemon", "pokeapi"]
 
 [dependencies]
-clap = { version = "4.5.53", features = ["derive"] }
-csv = "1.4.0"
-futures = "0.3.31"
-rustemon = "4.5.0"
-serde = { version = "1.0.228", features = ["derive"] }
-tokio = { version = "1.49.0", features = ["full"] }
+clap = { version = "=4.5.53", features = ["derive"] }
+csv = "=1.4.0"
+futures = "=0.3.31"
+rustemon = "=4.5.0"
+serde = { version = "=1.0.228", features = ["derive"] }
+tokio = { version = "=1.49.0", features = ["full"] }
 
 [features]
 default = ["clap/wrap_help"]

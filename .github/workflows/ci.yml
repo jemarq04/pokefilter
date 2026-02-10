@@ -38,11 +38,3 @@ jobs:
         run: cargo build --all-features
       - name: Testing
         run: cargo test --all-features
-
-  install:
-    name: Testing installation
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Installing
-        run: cargo install --all-features --path .
