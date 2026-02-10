@@ -1,4 +1,4 @@
-use crate::utils::enums::*;
+use crate::utils::enums::LanguageId;
 use clap::builder::styling::{AnsiColor, Effects, Style, Styles};
 use clap::{CommandFactory, Parser, Subcommand};
 
