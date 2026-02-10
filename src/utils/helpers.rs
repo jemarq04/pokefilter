@@ -52,10 +52,9 @@ pub fn fwriteln(outfile: &mut File, display: &Display, content: &str) -> Result<
   Ok(())
 }
 
-pub fn create_client(cache_dir: Option<std::path::PathBuf>) -> RustemonClient {
-  let cache_dir = match cache_dir {
-    Some(p) => Some(p),
-    None => {
+pub fn create_client(mut cache_dir: Option<std::path::PathBuf>) -> RustemonClient {
+  if cache_dir.is_none() {
+    cache_dir = {
       let mut result = None;
       if let Some(home) = std::env::home_dir() {
         let dirpath = format!("{}/.cache", home.display());
@@ -65,8 +64,8 @@ pub fn create_client(cache_dir: Option<std::path::PathBuf>) -> RustemonClient {
         }
       }
       result
-    },
-  };
+    };
+  }
   if let Some(path) = cache_dir
     && let Ok(client) = rustemon::client::RustemonClientBuilder::default()
       .with_manager(rustemon::client::CACacheManager::new(path, false))
