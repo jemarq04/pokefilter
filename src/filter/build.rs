@@ -428,6 +428,7 @@ async fn get_evo_stage_and_type(
   let mut stage = 0;
   let mut branched = false;
   let mut branching = false;
+  #[allow(clippy::match_same_arms)]
   match mon.name.as_str() {
     // Handle manual exceptions (limitation of API)
     "pikachu-starter" => {
