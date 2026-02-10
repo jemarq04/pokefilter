@@ -3,6 +3,7 @@ use clap::error::ErrorKind;
 use serde::{self, Deserialize, de};
 use std::{fs::File, path::Path};
 
+#[allow(dead_code)]
 #[derive(Clone, Debug, Deserialize)]
 struct Record {
   identifier: String,
