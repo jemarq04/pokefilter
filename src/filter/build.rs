@@ -754,6 +754,6 @@ mod tests {
         assert_eq!(species.id, LAST_SPECIES_ID);
       },
       None => panic!("Could not retrieve species resources"),
-    };
+    }
   }
 }

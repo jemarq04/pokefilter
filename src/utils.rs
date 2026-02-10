@@ -121,7 +121,6 @@ mod tests {
     for c in name.chars() {
       if c == '-' {
         first_char_in_word = true;
-        continue;
       } else if first_char_in_word {
         result.push(c.to_uppercase().next().unwrap());
         first_char_in_word = false;
@@ -186,7 +185,7 @@ mod tests {
           last_line = line.clone();
         }
       },
-    };
+    }
 
     // Generate ValueEnums from respective endpoints
     let _derive_line = last_line;
@@ -196,7 +195,7 @@ mod tests {
     let all_resources = rustemon::utility::language::get_all_entries(&client)
       .await
       .unwrap();
-    for resource in all_resources.iter() {
+    for resource in &all_resources {
       let name = resource.name.clone();
       let mut alias = String::new();
       for c in name.chars() {
@@ -229,6 +228,6 @@ mod tests {
           );
         }
       },
-    };
+    }
   }
 }
