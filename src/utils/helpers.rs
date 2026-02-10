@@ -29,7 +29,7 @@ pub async fn get_pokemon_name(
     if !form.is_default || form.names.is_empty() {
       continue;
     }
-    for n in form.names.iter() {
+    for n in &form.names {
       if let Ok(item) = n.language.follow(client).await
         && item.name == lang
       {

@@ -103,7 +103,7 @@ pub async fn build(
       ));
     };
 
-    for variety in species.varieties.iter() {
+    for variety in &species.varieties {
       let Ok(mon) = variety.pokemon.follow(&client).await else {
         return Err(cli::error(
           ErrorKind::InvalidValue,
@@ -139,7 +139,7 @@ pub async fn build_pokemon(
   let mut is_branched = None;
   let mut is_branching = None;
   let mut category = None;
-  for key in keys.iter() {
+  for key in keys {
     output.push(match *key {
       // Name/ID
       "identifier" => mon.name.clone(),
@@ -164,7 +164,7 @@ pub async fn build_pokemon(
       // Types
       "types" => {
         let mut types = Vec::new();
-        for r_type in mon.types.iter() {
+        for r_type in &mon.types {
           types.push(get_name_strict!(follow r_type.type_, client, lang.to_string())?);
         }
         types.join(";")
@@ -172,7 +172,7 @@ pub async fn build_pokemon(
       // Abilities
       "abilities" => {
         let mut abilities = Vec::new();
-        for r_ability in mon.abilities.iter() {
+        for r_ability in &mon.abilities {
           let mut ability: String =
             get_name_strict!(follow r_ability.ability.clone().unwrap(), client, lang.to_string())?;
           if r_ability.is_hidden {
@@ -187,7 +187,7 @@ pub async fn build_pokemon(
       // Egg Groups
       "egg_groups" => {
         let mut egg_groups = Vec::new();
-        for r_group in species.egg_groups.iter() {
+        for r_group in &species.egg_groups {
           egg_groups.push(get_name_strict!(follow r_group, client, lang.to_string())?);
         }
         egg_groups.join(";")
@@ -195,7 +195,7 @@ pub async fn build_pokemon(
       // Held Items
       "held_items" => {
         let mut held_items = Vec::new();
-        for r_item in mon.held_items.iter() {
+        for r_item in &mon.held_items {
           held_items.push(get_name_strict!(follow r_item.item, client, lang.to_string())?);
         }
         held_items.join(";")
@@ -350,7 +350,7 @@ pub async fn build_pokemon(
               if result > 0 {
                 break;
               }
-              for r_dex in species.pokedex_numbers.iter() {
+              for r_dex in &species.pokedex_numbers {
                 if r_dex.pokedex.name == dex {
                   result = start + r_dex.entry_number;
                   break;
@@ -369,7 +369,7 @@ pub async fn build_pokemon(
               if result > 0 {
                 break;
               }
-              for r_dex in species.pokedex_numbers.iter() {
+              for r_dex in &species.pokedex_numbers {
                 if r_dex.pokedex.name == dex {
                   result = start + r_dex.entry_number;
                   break;
@@ -384,7 +384,7 @@ pub async fn build_pokemon(
             let dex = category_map
               .get(category.clone().unwrap().as_str())
               .unwrap();
-            for r_dex in species.pokedex_numbers.iter() {
+            for r_dex in &species.pokedex_numbers {
               if r_dex.pokedex.name == *dex {
                 result = r_dex.entry_number;
               }
@@ -657,13 +657,13 @@ async fn get_evo_stage_and_type(
         };
         if !chain.evolves_to.is_empty() {
           let mut found1 = false;
-          for ch1 in chain.evolves_to.iter() {
+          for ch1 in &chain.evolves_to {
             if stage != 0 {
               break;
             }
             if !ch1.evolves_to.is_empty() {
               let mut found2 = false;
-              for ch2 in ch1.evolves_to.iter() {
+              for ch2 in &ch1.evolves_to {
                 if ch2.species.name == species.name {
                   stage = 3;
                   branched = ch1.evolves_to.len() > 1;
@@ -717,7 +717,7 @@ async fn get_category(
   } else if mon.name == "ursaluna-bloodmoon" || matches!(species.id, 1009..1026) {
     category = String::from("Paldea");
   } else {
-    for &name in ["Alola", "Galar", "Hisui", "Paldea"].iter() {
+    for &name in &["Alola", "Galar", "Hisui", "Paldea"] {
       if mon.name.contains(&format!("-{}", name.to_lowercase())) && !mon.name.ends_with("-cap") {
         category = String::from(name);
       }
