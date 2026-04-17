@@ -501,7 +501,7 @@ async fn get_evo_stage_and_type(
       branched = false;
     },
     "mr-mime-galar" => {
-      stage = 1;
+      stage = 2;
       branching = false;
       branched = false;
     },
